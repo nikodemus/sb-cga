@@ -145,3 +145,10 @@ VEC."
   "Compute hadamard product (elementwise product) of VEC A and VEC B,
 return result as a freshly allocated VEC."
   (%hadamard-product (alloc-vec) a b))
+
+(declaim (ftype (sfunction (vec) single-float) vec-length)
+         (inline vec-length))
+(defun vec-length (a)
+  "Length of VEC A. Note that the results are nonsensical for points: use
+first POINT->VECTOR3 if you need the distance of a point from origin."
+  (sb-cga-vm:%vec-length a))

@@ -186,3 +186,11 @@
                                  (vec 0.1 1.0 4.0 1.5)
                                  (vec 12.0 4.0 2.5 2.0))))
   t)
+
+(deftest vec-length.1
+    (is (= 1.0 (vec-length (vector3 1.0 0.0 0.0))))
+  t)
+
+(deftest vec-length.1
+    (is (= 1.7320508 (vec-length (vector3 -1.0 1.0 1.0))))
+  t)

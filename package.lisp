@@ -32,6 +32,7 @@
    #:vec* #:%vec*
    #:vec+ #:%vec+
    #:vec- #:%vec-
+   #:vec-length
    #:vec/ #:%vec/
    #:vec=
    #:vecp
@@ -52,6 +53,7 @@
   (:export
    #:%dot-product
    #:%vec=
+   #:%vec-length
    )
   (:use :cl :sb-c :sb-int :sb-cga)
   #+sb-cga-sse2
