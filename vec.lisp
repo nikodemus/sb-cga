@@ -119,3 +119,10 @@ if LOCATION is not a proper 3D vector with 4th element 0.0"
 (defun vec- (a b)
   "Substract VEC B from VEC A, return result as a freshly allocated VEC."
   (%vec- (alloc-vec) a b))
+
+(declaim (ftype (sfunction (vec single-float)) vec*)
+         (inline vec*))
+(defun vec* (a f)
+  "Multiply VEC A with single float F, returning the result in a freshly
+allocated VEC."
+  (%vec* (alloc-vec) a f))
