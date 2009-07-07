@@ -113,3 +113,9 @@ if LOCATION is not a proper 3D vector with 4th element 0.0"
 (defun vec+ (a b)
   "Add VEC A and VEC B, return result as a freshly allocated VEC."
   (%vec+ (alloc-vec) a b))
+
+(declaim (ftype (sfunction (vec vec) vec) vec-)
+         (inline vec-))
+(defun vec- (a b)
+  "Substract VEC B from VEC A, return result as a freshly allocated VEC."
+  (%vec- (alloc-vec) a b))
