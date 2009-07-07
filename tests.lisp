@@ -27,9 +27,11 @@
 (defmacro is ((test result (op &rest args)))
   (let* ((temps (sb-int:make-gensym-list (length args)))
          (form `(,op ,@args))
-         (lambda `(lambda ,temps (,op ,@temps))))
+         (lambda1 `(lambda ,temps (,op ,@temps)))
+         (lambda2 `(lambda () (,op ,@args))))
     `(and (,test ,result (eval ',form))
-          (,test ,result (funcall (compile nil ',lambda) ,@args))
+          (,test ,result (funcall (compile nil ',lambda1) ,@args))
+          (,test ,result (funcall (compile nil ',lambda2)))
           t)))
 
 (deftest alloc-vec.1
@@ -196,12 +198,17 @@
   t)
 
 (deftest normalize.1
-    (is (= 0.99999994 (vec-length (normalize (vector3 1.0 2.0 3.0)))))
+    (is (vec= (vec 0.26726124 0.5345225 0.8017837 0.0)
+              (normalize (vector3 1.0 2.0 3.0))))
+  t)
+
+(deftest normalize.2
+    (= 0.99999994 (vec-length (normalize (vector3 1.0 2.0 3.0))))
   t)
 
 (deftest %normalize.1
-    (is (= 0.99999994 (vec-length (%normalize (alloc-vec)
-                                              (vector3 1.0 2.0 4.0)))))
+    (= 0.99999994 (vec-length (%normalize (alloc-vec)
+                                          (vector3 1.0 2.0 4.0))))
   t)
 
 (deftest vec-lerp.1
