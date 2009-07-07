@@ -158,3 +158,10 @@ first POINT->VECTOR3 if you need the distance of a point from origin."
 (defun normalize (a)
   "Normalize VEC A, return result as a freshly allocated VEC."
   (%normalize (alloc-vec) a))
+
+(declaim (ftype (sfunction (vec vec single-float) vec) vec-lerp)
+         (inline vec-lerp))
+(defun vec-lerp (a b f)
+  "Linear interpolate VEC A and VEC B using single-float F as the
+interpolation factor, return result as a freshly allocated VEC."
+  (%vec-lerp (alloc-vec) a b f))

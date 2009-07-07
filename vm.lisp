@@ -261,7 +261,7 @@ RESULT. Unsafe."
 #-sb-cga-sse2
 (declaim (inline %vec/))
 (defun %vec/ (result a f)
-  "Divide VEC A by single float F, store result in VEC RESULT. Return RESULT.
+  "Divide VEC A by single-float F, store result in VEC RESULT. Return RESULT.
 Unsafe."
   (declare (optimize (speed 3) (safety 0) (debug 0) (sb-c::recognize-self-calls 0)))
   #+sb-cga-sse2
@@ -466,4 +466,65 @@ result in VEC RESULT. Return RESULT. Unsafe."
           (aref result 1) (/ vb len)
           (aref result 2) (/ vc len)
           (aref result 3) (/ vd len))
+    result))
+
+
+;;;; LINEAR INTERPOLATION
+
+(defknown %vec-lerp (vec vec vec single-float) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%vec-lerp)
+  (:translate %vec-lerp)
+  (:policy :fast-safe)
+  (:args (result-vector :scs (descriptor-reg) :target result)
+         (vector1 :scs (descriptor-reg))
+         (vector2 :scs (descriptor-reg))
+         (float :scs (single-reg)))
+  (:arg-types * * * single-float)
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) tmp)
+  (:temporary (:sc single-reg) tmp2)
+  (:temporary (:sc single-reg) floats)
+  (:temporary (:sc single-reg) 1-floats)
+  (:generator 10
+    ;; Load vectors
+    (load-row tmp vector1)
+    (load-row tmp2 vector2)
+    ;; Fill XMM reg with the float.
+    (inst movss floats float)
+    (inst unpcklps floats floats)
+    (inst unpcklps floats floats)
+    ;; Same for the the 1- version
+    (inst movss 1-floats (register-inline-constant 1.0))
+    (inst subss 1-floats float)
+    (inst unpcklps 1-floats 1-floats)
+    (inst unpcklps 1-floats 1-floats)
+    ;; Multiply VECTOR1 by 1-FLOATS, and VECTOR2 by FLOATS
+    (inst mulps tmp 1-floats)
+    (inst mulps tmp2 floats)
+    ;; Add
+    (inst addps tmp tmp2)
+    ;; Save result and return
+    (store-row tmp result-vector)
+    (move result result-vector)))
+
+#-sb-cga-sse2
+(declaim (inline %vec-lerp))
+(defun %vec-lerp (result a b f)
+  "Linear interpolate VEC A and VEC B using single-float F as the
+interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
+  (declare (optimize (speed 3) (safety 0) (debug 0) (sb-c::recognize-self-calls 0)))
+  #+sb-cga-sse2
+  (%vec-lerp result a b f)
+  #-sb-cga-sse2
+  (let ((f2 (- 1.0 f)))
+    (macrolet ((dim (n)
+                 `(setf (aref result ,n) (+ (* f2 (aref a ,n)) (* f (aref b .b))))))
+      (dim 0)
+      (dim 1)
+      (dim 2)
+      (dim 3))
     result))

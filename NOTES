@@ -33,7 +33,7 @@
 ******* DONE DOT-PRODUCT
 ******* DONE HADAMARD-PRODUCT, %HADAMARD-PRODUCT
 ******* DONE VEC-LENGTH
-******* TODO VEC-LERP
+******* DONE VEC-LERP
 ******* DONE NORMALIZE, %NORMALIZE,
 ********* TODO simple compiler macro.
 ******* TODO VECTOR-MIN, VECTOR-MAX

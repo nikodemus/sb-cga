@@ -34,6 +34,7 @@
    #:vec+ #:%vec+
    #:vec- #:%vec-
    #:vec-length
+   #:vec-lerp #:%vec-lerp
    #:vec/ #:%vec/
    #:vec=
    #:vecp

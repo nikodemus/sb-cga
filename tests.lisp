@@ -196,10 +196,25 @@
   t)
 
 (deftest normalize.1
-    (is (=  0.99999994 (vec-length (normalize (vector3 1.0 2.0 3.0)))))
+    (is (= 0.99999994 (vec-length (normalize (vector3 1.0 2.0 3.0)))))
   t)
 
 (deftest %normalize.1
-    (is (=  0.99999994 (vec-length (%normalize (alloc-vec)
-                                               (vector3 1.0 2.0 4.0)))))
+    (is (= 0.99999994 (vec-length (%normalize (alloc-vec)
+                                              (vector3 1.0 2.0 4.0)))))
+  t)
+
+(deftest vec-lerp.1
+    (is (vec= (point 1.5 1.5 1.5)
+              (vec-lerp (point 1.0 1.0 1.0)
+                        (point 2.0 2.0 2.0)
+                        0.5)))
+  t)
+
+(deftest %vec-lerp.1
+    (is (vec= (point 1.75 1.75 1.75)
+              (%vec-lerp (alloc-vec)
+                         (point 1.0 1.0 1.0)
+                         (point 2.0 2.0 2.0)
+                         0.75)))
   t)
