@@ -22,6 +22,7 @@
   (:export
    #:alloc-vec
    #:copy-vec #:%copy-vec
+   #:dot-product
    #:matrix
    #:point
    #:point->vector3
@@ -48,7 +49,9 @@
 
 (defpackage :sb-cga-vm
   (:export
-   #:%vec=)
+   #:%dot-product
+   #:%vec=
+   )
   (:use :cl :sb-c :sb-int :sb-cga)
   #+sb-cga-sse2
   (:import-from :sb-vm

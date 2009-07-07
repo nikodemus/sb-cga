@@ -274,3 +274,47 @@ Unsafe."
     (dim 2)
     (dim 3)
     result))
+
+;;;; DOT PRODUCT
+
+(defknown %dot-product (vec vec) single-float
+    (any #+sb-cga-sse2 always-translatable))
+
+#+sb-cga-sse2
+(define-vop (%dot-product)
+  (:translate %dot-product)
+  (:policy :fast-safe)
+  (:args (vector1 :scs (descriptor-reg))
+         (vector2 :scs (descriptor-reg)))
+  (:arg-types * *)
+  (:results (result :scs (single-reg)))
+  (:result-types single-float)
+  (:temporary (:sc single-reg) tmp)
+  (:temporary (:sc single-reg) tmp2)
+  (:generator 10
+    ;; Load vector into TMP
+    (load-row tmp vector1)
+    ;; Multiply elementwise
+    (inst mulps tmp (ea-for-row vector2))
+    ;; Get low half into high half of a copy
+    (inst movlhps tmp2 tmp)
+    ;; First two additions -- result in high half of tmp2
+    (inst addps tmp2 tmp)
+    ;; Low half of the result into first word of tmp2,
+    ;; and high half into third word of tmp2
+    (inst unpckhps tmp2 tmp2)
+    ;; High half of result into first word of tmp
+    (inst movaps tmp tmp2)
+    (inst unpckhps tmp tmp)
+    ;; Final addition
+    (inst addss tmp tmp2)
+    (inst movss result tmp)))
+
+#-sb-cga-sse2
+(progn
+  (declaim (inline %dot-product))
+  (defun %dot-product (a b)
+    (declare (optimize (speed 3) (safety 0) (debug 0)))
+    (macrolet ((dim (n)
+                 `(* (aref a ,n) (aref b ,n))))
+      (+ (dim 0) (dim 1) (dim 2) (dim 3)))))

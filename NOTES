@@ -30,7 +30,7 @@
 ******* DONE VEC-, %VEC-
 ******* DONE VEC*, %VEC*
 ******* DONE VEC/, %VEC/
-******* TODO DOT-PRODUCT
+******* DONE DOT-PRODUCT
 ******* TODO HADAMARD-PRODUCT
 ******* TODO VEC-LENGTH
 ******* TODO VEC-LERP

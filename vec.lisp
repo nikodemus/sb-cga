@@ -132,3 +132,9 @@ VEC."
 (defun vec/ (a f)
   "Divide VEC A by single-float F, return result as a freshly allocated VEC."
   (%vec/ (alloc-vec) a f))
+
+(declaim (ftype (sfunction (vec vec) single-float))
+         (inline dot-product))
+(defun dot-product (a b)
+  "Compute dot product VEC A and VEC B."
+  (sb-cga-vm:%dot-product a b))

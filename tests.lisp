@@ -163,3 +163,13 @@
               (%vec/ (vec 5.5 5.5 5.5 5.5)
                      (vec 0.5 1.0 1.5 2.0) 0.5)))
   t)
+
+(deftest dot-product.1
+    (is (= 4.0 (dot-product (vec 1.0 1.0 1.0 1.0)
+                            (vec 1.0 1.0 1.0 1.0))))
+  t)
+
+(deftest dot-product.2
+    (is (= 0.0 (dot-product (vec 0.0 0.0 0.0 0.0)
+                            (vec 1.1 2.2 3.3 4.4))))
+  t)
