@@ -221,12 +221,11 @@ VEC."
         (dim 3)))
     result))
 
-(declaim (ftype (sfunction (vec vec) vec) cross-product)
+(declaim (ftype (sfunction (vector3 vector3) vec) cross-product)
          (inline cross-product))
 (defun cross-product (a b)
-  "Cross product of VEC A and VEC B, return result as a freshly
-allocated VEC. Unlike with most operations in SB-CGA, the 4th element is
-ignored: A and B are always considered to be 3D vectors."
+  "Cross product of 3D vector A and 3D vector B, return result as a freshly
+allocated VEC."
   (declare (type vector a b) (optimize speed))
   (let ((a1 (aref a 0))
         (a2 (aref a 1))

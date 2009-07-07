@@ -26,8 +26,8 @@
   "Return value in the specificed ROW and COLUMN in MATRIX."
   (aref matrix (+ row (* column 4))))
 
-(declaim (inline %set-mref))
-(defun %set-mref (matrix row column value)
+(declaim (inline (setf mref)))
+(defun (setf mref) (value matrix row column)
   (setf (aref matrix (+ row (* column 4))) value))
 
 ;;; PRETTY-PRINTING
@@ -90,11 +90,103 @@ major order.)"
   "Construct a zero matrix."
   (make-array 16 :element-type 'single-float))
 
-(declaim (ftype (sfunction () matrix) identity-matrix)
-         (inline identity-matrix))
+(declaim (ftype (sfunction () matrix) identity-matrix))
 (defun identity-matrix ()
   "Construct an identity matrix."
   (matrix 1.0 0.0 0.0 0.0
           0.0 1.0 0.0 0.0
           0.0 0.0 1.0 0.0
           0.0 0.0 0.0 1.0))
+
+(declaim (ftype (sfunction (vec) matrix) translation-matrix))
+(defun translate (a)
+  "Construct a translation matrix from VEC A. 4th element is ignored."
+  (matrix 1.0 0.0 0.0 (aref a 0)
+          0.0 1.0 0.0 (aref a 1)
+          0.0 0.0 1.0 (aref a 2)
+          0.0 0.0 0.0 1.0))
+
+(declaim (ftype (sfunction (vec) matrix) scaling-matrix))
+(defun scale (a)
+  "Construct a scaling matrix from VEC A. 4th element is ignored."
+  (matrix (aref a 0)  0.0         0.0        0.0
+          0.0         (aref a 1)  0.0         0.0
+          0.0         0.0         (aref a 2)  0.0
+          0.0         0.0         0.0         1.0))
+
+(declaim (ftype (sfunction (vec single-float) rotate-around)))
+(defun rotate-around (a radians)
+  "Construct a rotation matrix that rotates by RADIANS around VEC A. 4th
+element of A is ignored."
+  (let ((c (cos radians))
+	(s (sin radians))
+	(g (- 1.0 (cos radians))))
+    (let* ((x (aref a 0))
+           (y (aref a 1))
+           (z (aref a 2))
+           (gxx (* g x x)) (gxy (* g x y)) (gxz (* g x z))
+           (gyy (* g y y)) (gyz (* g y z)) (gzz (* g z z)))
+      (matrix
+       (+ gxx c)        (- gxy (* s z))  (+ gxz (* s y)) 0.0
+       (+ gxy (* s z))  (+ gyy c)        (- gyz (* s x)) 0.0
+       (- gxz (* s y))  (+ gyz (* s x))  (+ gzz c)       0.0
+       0.0              0.0              0.0             1.0))))
+
+(declaim (ftype (sfunction (vec vec) matrix) reorient))
+(defun reorient (a b)
+  "Construct a transformation matrix to reorient A with B."
+  (let ((na (normalize a))
+	(nb (normalize b)))
+    ;; FIXME: Use a looser equality here, maybe.
+    (if (vec= na nb)
+	(identity-matrix)
+	(rotate-around (normalize (cross-product na nb))
+		       (acos (dot-product na nb))))))
+
+(declaim (inline square))
+(defun square (x) (* x x))
+
+;;; FIXME: Proper inversion, not just this single case, maybe?
+(declaim (ftype (sfunction (matrix) matrix) inverse-matrix))
+(defun inverse-matrix (matrix)
+  "Inverse of an orthogonal affine 4x4 matrix. The argument is not checked
+for orthogonality or affinness."
+  (declare (type matrix matrix))
+  (let ((inverse (zero-matrix)))
+    ;; transpose and invert scales for upper 3x3
+    (dotimes (i 3)
+      (let ((scale (/ 1.0 (+ (square (mref matrix 0 i))
+                             (square (mref matrix 1 i))
+                             (square (mref matrix 2 i))))))
+        (dotimes (j 3)
+          (setf (mref inverse i j) (* scale (mref matrix j i))))))
+    ;; translation: negation after dotting with upper rows
+    (let ((x (mref matrix 0 3))
+          (y (mref matrix 1 3))
+          (z (mref matrix 2 3)))
+      (dotimes (i 3)
+        (setf (inverse i 3) (- (+ (* x (mref inverse i 0))
+                                  (* y (mref inverse i 1))
+                                  (* z (mref inverse i 2)))))))
+    ;; affine bottom row (0 0 0 1)
+    (dotimes (i 3)
+      (setf (mref inverse 3 i) 0.0))
+    (setf (mref inverse 3 3) 1.0)
+    inverse))
+
+(declaim (ftype (sfunction (matrix) matrix) transpose-matrix))
+(defun transpose-matrix (matrix)
+  "Transpose of MATRIX."
+  (let ((transpose (zero-matrix)))
+    (dotimes (i 4)
+      (dotimes (j 4)
+	(setf (mref transpose i j) (mref matrix j i))))
+    transpose))
+
+;;;; MATRIX MULTIPLICATION
+
+(declaim (ftype (sfunction (vec matrix) vec) transform-vec)
+         (inline transform-vec))
+(defun transform-vec (vec matrix)
+  "Apply transformation MATRIX to VEC, return result as a freshly allocated VEC."
+  (%transform-vec (alloc-vec) vec matrix))

@@ -26,6 +26,7 @@
    #:dot-product
    #:hadamard-product #:%hadamard-product
    #:identity-matrix
+   #:inverse-matrix
    #:matrix
    #:matrix=
    #:matrixp
@@ -34,6 +35,11 @@
    #:point
    #:point->vector3
    #:pointp
+   #:reorient
+   #:rotate-around
+   #:scale
+   #:translate
+   #:transform-vec #:%transform-vec
    #:vec
    #:vec* #:%vec*
    #:vec+ #:%vec+

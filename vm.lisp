@@ -528,3 +528,51 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
       (dim 2)
       (dim 3))
     result))
+
+;;;; TRANSFORMING A VECTOR
+
+(defknown %transform-vec (vec vec matrix) vec
+    (any #+sb-cga-sse2 always-translatable))
+
+(define-vop (%transform-vec)
+  (:translate %transform-vec)
+  (:policy :fast-safe)
+  (:args (result-vector :scs (descriptor-reg) :target result)
+         (vector :scs (descriptor-reg))
+         (matrix :scs (descriptor-reg)))
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) vec)
+  (:temporary (:sc single-reg) row1)
+  (:temporary (:sc single-reg) row2)
+  (:temporary (:sc single-reg) row3)
+  (:temporary (:sc single-reg) row4)
+  (:note "oops")
+  (:generator 10
+    ;; Load stuff
+    (load-row vec vector)
+    (load-row row1 matrix 0)
+    (load-row row2 matrix 1)
+    (load-row row3 matrix 2)
+    (load-row row4 matrix 3)
+    ;; Multiply each row by vector
+    (inst mulps row1 vec)
+    (inst mulps row2 vec)
+    (inst mulps row3 vec)
+    (inst mulps row4 vec)
+    ;; Add result -- ends up in row1
+    (inst addps row1 row2)
+    (inst addps row3 row4)
+    (inst addps row1 row3)
+    ;; Store result
+    (store-row row1 result-vector)
+    (move result result-vector)))
+
+#-sb-cga-sse2
+(declaim (inline %transform-vec))
+(defun %transform-vec (result vec matrix)
+  "Apply transformation MATRIX to VEC, store result in RESULT. Return RESULT. Unsafe."
+  (declare (optimize (speed 3) (safety 0) (debug 0) (sb-c::recognize-self-calls 0)))
+  #+sb-cga-sse2
+  (%transform-vec result vec matrix)
+  #-sb-cga-sse2
+  (error "TODO"))
