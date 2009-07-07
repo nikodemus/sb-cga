@@ -403,3 +403,67 @@ result in VEC RESULT. Return RESULT. Unsafe."
                  `(let ((d (aref a ,n)))
                      (* d d))))
       (sqrt (+ (dim 0) (dim 1) (dim 2) (dim 3))))))
+
+;;;; NORMALIZATION
+
+(defknown %normalize (vec vec) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%normalize)
+  (:translate %normalize)
+  (:policy :fast-safe)
+  (:args (result-vector :scs (descriptor-reg) :target result)
+         (vector :scs (descriptor-reg)))
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) tmp)
+  (:temporary (:sc single-reg) tmp2)
+  (:temporary (:sc single-reg) tmp3)
+  (:generator 10
+    ;; Load vector into TMP and TMP2
+    (load-row tmp vector)
+    (inst movaps tmp3 tmp)
+    ;; Multiply elementwise
+    (inst mulps tmp tmp)
+    ;; Get low half into high half of a copy
+    (inst movlhps tmp2 tmp)
+    ;; First addition -- result in high half of tmp2
+    (inst addps tmp2 tmp)
+    ;; Low half of the result into first word of tmp2,
+    ;; and high half into third word of tmp2
+    (inst unpckhps tmp2 tmp2)
+    ;; High half of result into first word of tmp
+    (inst movaps tmp tmp2)
+    (inst unpckhps tmp tmp)
+    ;; Final addition
+    (inst addss tmp tmp2)
+    ;; Square root
+    (inst sqrtss tmp tmp)
+    ;; Fill into tmp
+    (inst unpcklps tmp tmp)
+    (inst unpcklps tmp tmp)
+    ;; Divide original
+    (inst divps tmp3 tmp)
+    ;; Store result
+    (store-row tmp3 result-vector)
+    (move result result-vector)))
+
+#-sse2
+(declaim (inline %normalize))
+(defun %normalize (result a)
+  "Normalize VEC A, store result into VEC RESULT. Return RESULT. Unsafe."
+  (declare (optimize (speed 3) (safety 0) (debug 0) (sb-c::recognize-self-calls 0)))
+  #+sb-cga-sse2
+  (%normalize result a)
+  #-sb-cga-sse2
+  (let* ((va (aref a 0))
+         (vb (aref a 1))
+         (vc (aref a 2))
+         (vd (aref a 3))
+         (len (sqrt (+ (* va va) (* vb vb) (* vc vc) (* vd vd)))))
+    (setf (aref result 0) (/ va len)
+          (aref result 1) (/ vb len)
+          (aref result 2) (/ vc len)
+          (aref result 3) (/ vd len))
+    result))

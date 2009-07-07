@@ -25,6 +25,7 @@
    #:dot-product
    #:hadamard-product #:%hadamard-product
    #:matrix
+   #:normalize #:%normalize
    #:point
    #:point->vector3
    #:pointp

@@ -194,3 +194,12 @@
 (deftest vec-length.1
     (is (= 1.7320508 (vec-length (vector3 -1.0 1.0 1.0))))
   t)
+
+(deftest normalize.1
+    (is (=  0.99999994 (vec-length (normalize (vector3 1.0 2.0 3.0)))))
+  t)
+
+(deftest %normalize.1
+    (is (=  0.99999994 (vec-length (%normalize (alloc-vec)
+                                               (vector3 1.0 2.0 4.0)))))
+  t)

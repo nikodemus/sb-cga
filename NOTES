@@ -34,7 +34,8 @@
 ******* DONE HADAMARD-PRODUCT, %HADAMARD-PRODUCT
 ******* DONE VEC-LENGTH
 ******* TODO VEC-LERP
-******* TODO NORMALIZE, %NORMALIZE, simple compiler macro.
+******* DONE NORMALIZE, %NORMALIZE,
+********* TODO simple compiler macro.
 ******* TODO VECTOR-MIN, VECTOR-MAX
 ******* TODO REVERSE-VEC, %REVERSE-VEC
 ******* TODO CROSS-PRODUCT, %CROSS-PRODUCT

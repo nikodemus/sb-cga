@@ -152,3 +152,9 @@ return result as a freshly allocated VEC."
   "Length of VEC A. Note that the results are nonsensical for points: use
 first POINT->VECTOR3 if you need the distance of a point from origin."
   (sb-cga-vm:%vec-length a))
+
+(declaim (ftype (sfunction (vec) vec))
+         (inline normalize))
+(defun normalize (a)
+  "Normalize VEC A, return result as a freshly allocated VEC."
+  (%normalize (alloc-vec) a))
