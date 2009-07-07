@@ -105,3 +105,11 @@ if LOCATION is not a proper 3D vector with 4th element 0.0"
 (defun copy-vec (vec)
   "Allocate a fresh copy of VEC."
   (%copy-vec (alloc-vec) vec))
+
+;;;; ARITHMETIC
+
+(declaim (ftype (sfunction (vec vec) vec) vec+)
+         (inline vec+))
+(defun vec+ (a b)
+  "Add VEC A and VEC B, return result as a freshly allocated VEC."
+  (%vec+ (alloc-vec) a b))

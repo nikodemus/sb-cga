@@ -82,7 +82,6 @@
     (load-row tmp vector)
     ;; Save copy to source vector
     (store-row tmp result-vector)
-    ;; Ensure result
     (move result result-vector)))
 
 #-sb-cga-sse2
@@ -95,6 +94,46 @@
   #-sb-cga-sse2
   (macrolet ((dim (n)
                `(setf (aref result ,n) (aref vec ,n))))
+    (dim 0)
+    (dim 1)
+    (dim 2)
+    (dim 3)
+    result))
+
+;;;; VECTOR ADDITION
+
+(defknown %vec+ (vec vec vec) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%vec+)
+  (:translate %vec+)
+  (:policy :fast-safe)
+  (:args (result-vector :scs (descriptor-reg) :target result)
+         (vector1 :scs (descriptor-reg))
+         (vector2 :scs (descriptor-reg)))
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) tmp)
+  (:generator 10
+    ;; Load vector into TMP
+    (load-row tmp vector1)
+    ;; Add
+    (inst addps tmp (ea-for-row vector2))
+    ;; Save result to source vector
+    (store-row tmp result-vector)
+    (move result result-vector)))
+
+#-sb-cga-sse2
+(declaim (inline %vec+))
+(defun %vec+ (result a b)
+  "Add VEC A and B, store result in VEC RESULT. Return RESULT. Unsafe"
+  (declare (optimize (speed 3) (safety 0) (debug 0) (sb-c::recognize-self-calls 0)))
+  #+sb-cga-sse2
+  (%vec+ result a b)
+  #-sb-cga-sse2
+  (macrolet ((dim (n)
+               `(setf (aref result ,n) (+ (aref a ,n) (aref b ,n)))))
     (dim 0)
     (dim 1)
     (dim 2)

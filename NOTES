@@ -26,7 +26,7 @@
 ******* DONE POINT->VECTOR3
 ******* DONE VECTOR3->POINT
 ***** TODO Arithmetic
-******* TODO VEC+, %VEC+
+******* DONE VEC+, %VEC+
 ******* TODO VEC-, %VEC-
 ******* TODO VEC*, %VEC*
 ******* TODO VEC/, %VEC/

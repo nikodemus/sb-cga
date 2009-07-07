@@ -115,3 +115,16 @@
       (type-error ()
         :error))
   :error)
+
+(deftest vec+.1
+    (is (vec= (vec 1.0 2.0 -3.0 -4.0)
+              (vec+ (vec 1.0 0.0 1.0 0.1)
+                    (vec 0.0 2.0 -4.0 -4.1))))
+  t)
+
+(deftest %vec+.1
+    (is (vec= (vec 0.1 0.2 0.3 0.4)
+              (%vec+ (vec 1.0 1.0 1.0 1.0)
+                     (vec 0.1 0.1 0.1 0.1)
+                     (vec 0.0 0.1 0.2 0.3))))
+  t)

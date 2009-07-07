@@ -20,14 +20,14 @@
   (:documentation
    "Computer graphics algebra package for SBCL.")
   (:export
-   #:%copy-vec
    #:alloc-vec
-   #:copy-vec
+   #:copy-vec #:%copy-vec
    #:matrix
    #:point
    #:point->vector3
    #:pointp
    #:vec
+   #:vec+ #:%vec+
    #:vec=
    #:vecp
    #:vector3
