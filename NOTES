@@ -16,11 +16,11 @@
 ******* DONE VECTOR3P
 ******* TODO VEC=
 ***** TODO Constructors & copiers
-******* TODO ALLOC-VEC
-******* TODO VEC
+******* DONE ALLOC-VEC
+******* DONE VEC
 ******* TODO COPY-VEC, %COPY-VEC
-******* TODO POINT
-******* TODO VECTOR3
+******* DONE POINT
+******* DONE VECTOR3
 ******* TODO POINT->VECTOR3
 ******* TODO VECTOR3->POINT
 ***** TODO Arithmetic

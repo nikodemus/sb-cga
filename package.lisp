@@ -20,10 +20,13 @@
   (:documentation
    "Computer graphics algebra package for SBCL.")
   (:export
+   #:alloc-vec
    #:matrix
+   #:point
    #:pointp
    #:vec
    #:vecp
+   #:vector3
    #:vector3p
    )
   (:use :cl :sb-int))
