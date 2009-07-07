@@ -16,14 +16,24 @@
 ;;;; TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ;;;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-(defpackage :sb-cga
-  (:documentation
-   "Computer graphics algebra package for SBCL.")
-  (:export
-   #:matrix
-   #:pointp
-   #:vec
-   #:vecp
-   #:vector3p
-   )
-  (:use :cl :sb-int))
+(in-package :sb-cga)
+
+;;;; PREDICATES
+
+(declaim (ftype (sfunction (t) boolean))
+         (inline vecp))
+(defun vecp (object)
+  "Return true if OBJECT is a VEC.."
+  (typep object 'vec))
+
+(declaim (ftype (sfunction (t) boolean) pointp)
+         (inline pointp))
+(defun pointp (object)
+  "Return true if OBJECT is a point."
+  (and (vecp object) (= 1.0 (aref object 3))))
+
+(declaim (ftype (sfunction (t) boolean) pointp)
+         (inline pointp))
+(defun vector3p (object)
+  "Return true if OBJECT is a 3D vector."
+  (and (vecp object) (= 0.0 (aref object 3))))

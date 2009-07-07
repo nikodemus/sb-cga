@@ -5,14 +5,15 @@
 
 * Version 1.0
 
-*** TODO Defsystem
-*** TODO Defpackage
+*** DONE Defsystem
+*** DONE Defpackage
 *** TODO Manual
-*** TODO VEC type
+*** TODO VEC
+***** DONE VEC type
 ***** TODO Predicates
-******* TODO VECP
-******* TODO POINTP
-******* TODO VECTOR3P
+******* DONE VECP
+******* DONE POINTP
+******* DONE VECTOR3P
 ******* TODO VEC=
 ***** TODO Constructors & copiers
 ******* TODO ALLOC-VEC
@@ -37,7 +38,8 @@
 ******* TODO CROSS-PRODUCT, %CROSS-PRODUCT
 ******* TODO TRANSFORM-VEC, %TRANSFORM-VEC
 ******* TODO REDUCE-VEC (* and +)
-*** TODO MATRIX type
+*** TODO MATRIX
+***** DONE MATRIX type
 ***** TODO MREF
 ***** TODO MATRIX* (variable arity)
 ***** TODO MAKE-MATRIX

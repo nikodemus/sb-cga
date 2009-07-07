@@ -20,4 +20,5 @@
   :description "Computer graphic algebra for SBCL."
   :components
   ((:file "package")
-   (:file "types" :depends-on ("package"))))
+   (:file "types" :depends-on ("package"))
+   (:file "vec" :depends-on ("package" "types"))))
