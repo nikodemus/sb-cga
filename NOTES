@@ -37,7 +37,7 @@
 ******* DONE NORMALIZE, %NORMALIZE,
 ********* TODO compiler-macro
 	  Transform important cases into NORMALIZED-VEC, etc.
-******* TODO VECTOR-MIN, VECTOR-MAX
+******* DONE VEC-MIN, VEC-MAX
 ******* TODO CROSS-PRODUCT, %CROSS-PRODUCT
 ******* TODO TRANSFORM-VEC, %TRANSFORM-VEC
 ******* TODO REDUCE-VEC (* and +)

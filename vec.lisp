@@ -165,3 +165,35 @@ first POINT->VECTOR3 if you need the distance of a point from origin."
   "Linear interpolate VEC A and VEC B using single-float F as the
 interpolation factor, return result as a freshly allocated VEC."
   (%vec-lerp (alloc-vec) a b f))
+
+(declaim (ftype (sfunction (vec &rest vec) vec) vec-min)
+         (inline vec-min))
+(defun vec-min (vec &rest vecs)
+  "Elementwise minimum of VEC and VECS, return result as a freshly allocated
+VEC."
+  (declare (dynamic-extent vecs))
+  (let ((result (copy-vec vec)))
+    (dolist (vec vecs)
+      (macrolet ((dim (n)
+                   `(setf (aref result ,n) (min (aref result ,n) (aref vec ,n)))))
+        (dim 0)
+        (dim 1)
+        (dim 2)
+        (dim 3)))
+    result))
+
+(declaim (ftype (sfunction (vec &rest vec) vec) vec-max)
+         (inline vec-max))
+(defun vec-max (vec &rest vecs)
+  "Elementwise maximum of VEC and VECS, return result as a freshly allocated
+VEC."
+  (declare (dynamic-extent vecs))
+  (let ((result (copy-vec vec)))
+    (dolist (vec vecs)
+      (macrolet ((dim (n)
+                   `(setf (aref result ,n) (max (aref result ,n) (aref vec ,n)))))
+        (dim 0)
+        (dim 1)
+        (dim 2)
+        (dim 3)))
+    result))
