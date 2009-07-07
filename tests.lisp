@@ -241,3 +241,9 @@
                        (vec -1.0 -2.0 0.3 -4.0)
                        (vec -1.0 -2.0 -3.0 0.4))))
   t)
+
+(deftest cross-product.1
+    (is (vec= (vector3 0.0 0.0 1.0)
+              (cross-product (vector3 1.0 0.0 0.0)
+                             (vector3 0.0 1.0 0.0))))
+  t)

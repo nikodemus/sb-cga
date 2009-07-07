@@ -22,6 +22,7 @@
   (:export
    #:alloc-vec
    #:copy-vec #:%copy-vec
+   #:cross-product
    #:dot-product
    #:hadamard-product #:%hadamard-product
    #:matrix

@@ -38,7 +38,7 @@
 ********* TODO compiler-macro
 	  Transform important cases into NORMALIZED-VEC, etc.
 ******* DONE VEC-MIN, VEC-MAX
-******* TODO CROSS-PRODUCT, %CROSS-PRODUCT
+******* DONE CROSS-PRODUCT
 ******* TODO TRANSFORM-VEC, %TRANSFORM-VEC
 ******* TODO REDUCE-VEC (* and +)
 *** TODO MATRIX
