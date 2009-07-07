@@ -23,10 +23,12 @@
    #:alloc-vec
    #:matrix
    #:point
+   #:point->vector3
    #:pointp
    #:vec
    #:vecp
    #:vector3
+   #:vector3->point
    #:vector3p
    )
   (:use :cl :sb-int))

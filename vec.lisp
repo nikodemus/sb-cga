@@ -73,3 +73,21 @@ is 0.0."
 (defun vector3 (a b c)
   "Allocate 3D vector [A,B,C]."
   (vec a b c 0.0))
+
+;;;; CONVERSIONS
+
+(declaim (ftype (sfunction (vec) vec) point->vector3)
+         (inline point->vector3))
+(defun point->vector3 (point)
+  "Return 3D vector corresponding to coordinates of POINT. Outside safe code
+4th element of POINT is not asserted to be 1.0."
+  (safe-check (pointp point))
+  (vector3 (aref point 0) (aref point 1) (aref point 2)))
+
+(declaim (ftype (sfunction (vec) vec) vector3->point)
+         (inline vector3->point))
+(defun vector3->point (location)
+  "Return point for corresponding to the 3D vector LOCATION. Outside safe code
+4th element of LOCATION is not asserted to be 0.0."
+  (safe-check (vector3p location))
+  (point (aref location 0) (aref location 1) (aref location 2)))

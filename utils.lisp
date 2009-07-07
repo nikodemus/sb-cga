@@ -16,10 +16,8 @@
 ;;;; TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ;;;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-(defsystem :sb-cga
-  :description "Computer graphic algebra for SBCL."
-  :components
-  ((:file "package")
-   (:file "types" :depends-on ("package"))
-   (:file "utils" :depends-on ("package"))
-   (:file "vec" :depends-on ("package" "types" "utils"))))
+(in-package :sb-cga)
+
+(defmacro safe-check (form &environment env)
+  (when (sb-c:policy env (= safety 3))
+    `(assert ,form)))

@@ -21,8 +21,8 @@
 ******* TODO COPY-VEC, %COPY-VEC
 ******* DONE POINT
 ******* DONE VECTOR3
-******* TODO POINT->VECTOR3
-******* TODO VECTOR3->POINT
+******* DONE POINT->VECTOR3
+******* DONE VECTOR3->POINT
 ***** TODO Arithmetic
 ******* TODO VEC+, %VEC+
 ******* TODO VEC-, %VEC-
