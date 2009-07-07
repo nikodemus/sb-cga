@@ -35,9 +35,9 @@
 ******* DONE VEC-LENGTH
 ******* DONE VEC-LERP
 ******* DONE NORMALIZE, %NORMALIZE,
-********* TODO simple compiler macro.
+********* TODO compiler-macro
+	  Transform important cases into NORMALIZED-VEC, etc.
 ******* TODO VECTOR-MIN, VECTOR-MAX
-******* TODO REVERSE-VEC, %REVERSE-VEC
 ******* TODO CROSS-PRODUCT, %CROSS-PRODUCT
 ******* TODO TRANSFORM-VEC, %TRANSFORM-VEC
 ******* TODO REDUCE-VEC (* and +)
