@@ -91,3 +91,11 @@ is 0.0."
 4th element of LOCATION is not asserted to be 0.0."
   (safe-check (vector3p location))
   (point (aref location 0) (aref location 1) (aref location 2)))
+
+;;;; COMPARISON
+
+(declaim (ftype (sfunction (vec vec) boolean) vec=)
+         (inline vec=))
+(defun vec= (a b)
+  "Return true if VEC A and VEC B are elementwise identical."
+  (sb-cga-vm:%vec= a b))

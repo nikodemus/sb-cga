@@ -32,3 +32,27 @@
    #:vector3p
    )
   (:use :cl :sb-int))
+
+;;;; KLUDGE: SBCL doesn't currently have SSE2 feature, but it's cleaner to
+;;;; conditionalize on a single feature (relevant once x86 gets SSE2
+;;;; instructions.)
+#+x86-64
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (pushnew :sb-cga-sse2 *features*))
+
+(defpackage :sb-cga-vm
+  (:export
+   #:%vec=)
+  (:use :cl :sb-c :sb-int :sb-cga)
+  #+sb-cga-sse2
+  (:import-from :sb-vm
+                ;; General purpose stuff
+                #:inst
+                #:descriptor-reg
+                #:single-reg
+                ;; Instruction names
+                #:test
+                #:cmpps
+                #:movmskps
+                #:movaps
+                ))
