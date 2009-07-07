@@ -48,6 +48,29 @@
 is 0.0."
   `(satisfies vector3p))
 
+;;;; PRETTY PRINTING
+
+(defun pprint-vec (stream vec)
+  (print-unreadable-object (vec stream :type nil :identity nil)
+    (cond ((vector3p vec)
+           (format stream "Vector3 ~s, ~s, ~s"
+                   (aref vec 0)
+                   (aref vec 1)
+                   (aref vec 2)))
+          ((pointp vec)
+           (format stream "Point ~s, ~s, ~s"
+                   (aref vec 0)
+                   (aref vec 1)
+                   (aref vec 2)))
+          (t
+           (format stream "Vec ~s, ~s, ~s, ~s"
+                   (aref vec 0)
+                   (aref vec 1)
+                   (aref vec 2)
+                   (aref vec 3)))))
+  vec)
+(set-pprint-dispatch 'vec 'pprint-vec)
+
 ;;;; CONSTRUCTORS
 
 (declaim (ftype (sfunction () vec) alloc-vec)

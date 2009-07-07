@@ -25,7 +25,11 @@
    #:cross-product
    #:dot-product
    #:hadamard-product #:%hadamard-product
+   #:identity-matrix
    #:matrix
+   #:matrix=
+   #:matrixp
+   #:mref
    #:normalize #:%normalize
    #:point
    #:point->vector3
@@ -44,6 +48,7 @@
    #:vector3
    #:vector3->point
    #:vector3p
+   #:zero-matrix
    )
   (:use :cl :sb-int))
 

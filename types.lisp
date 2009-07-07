@@ -38,4 +38,4 @@ to a point produces a point, etc."
 (deftype matrix ()
   "4x4 matrix of single floats, represented as a one-dimensional vector stored
 in column-major order."
-  `(simple-array float (16)))
+  `(simple-array single-float (16)))

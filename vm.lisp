@@ -449,7 +449,7 @@ result in VEC RESULT. Return RESULT. Unsafe."
     (store-row tmp3 result-vector)
     (move result result-vector)))
 
-#-sse2
+#-sb-cga-sse2
 (declaim (inline %normalize))
 (defun %normalize (result a)
   "Normalize VEC A, store result into VEC RESULT. Return RESULT. Unsafe."

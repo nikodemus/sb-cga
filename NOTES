@@ -34,28 +34,27 @@
 ******* DONE HADAMARD-PRODUCT, %HADAMARD-PRODUCT
 ******* DONE VEC-LENGTH
 ******* DONE VEC-LERP
-******* DONE NORMALIZE, %NORMALIZE,
-********* TODO compiler-macro
-	  Transform important cases into NORMALIZED-VEC, etc.
+******* DONE NORMALIZE, %NORMALIZE
 ******* DONE VEC-MIN, VEC-MAX
 ******* DONE CROSS-PRODUCT
 ******* TODO TRANSFORM-VEC, %TRANSFORM-VEC
-******* TODO REDUCE-VEC (* and +)
 *** TODO MATRIX
+***** TODO Tests
 ***** DONE MATRIX type
-***** TODO MREF
+***** DONE MREF
+***** DONE MATRIXP
 ***** TODO MATRIX* (variable arity)
-***** TODO MAKE-MATRIX
+***** DONE MATRIX
 ***** TODO MAKE-TRANSLATION-MATRIX
 ***** TODO MAKE-SCALING-MATRIX
 ***** TODO MAKE-ROTATION-MATRIX
 ***** TODO MAKE-REORIENTING-MATRIX
 ***** TODO TRANSPOSE-MATRIX
 ***** TODO INVERSE-MATRIX (orthogonal
-***** TODO MAKE-ZERO-MATRIX
-***** TODO MAKE-IDENTIY-MATRIX
+***** DONE MAKE-ZERO-MATRIX
+***** DONE MAKE-IDENTIY-MATRIX
 ***** TODO COPY-MATRIX
-***** TODO MATRIX=
+***** DONE MATRIX=
 
 * Version 2.0
 *** TODO Compiler macros to transform nested operations for less consing.
