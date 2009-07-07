@@ -123,6 +123,12 @@ if LOCATION is not a proper 3D vector with 4th element 0.0"
 (declaim (ftype (sfunction (vec single-float)) vec*)
          (inline vec*))
 (defun vec* (a f)
-  "Multiply VEC A with single float F, returning the result in a freshly
-allocated VEC."
+  "Multiply VEC A with single-float F, return result as a freshly allocated
+VEC."
   (%vec* (alloc-vec) a f))
+
+(declaim (ftype (sfunction (vec single-float) vec) vec/)
+         (inline vec/))
+(defun vec/ (a f)
+  "Divide VEC A by single-float F, return result as a freshly allocated VEC."
+  (%vec/ (alloc-vec) a f))

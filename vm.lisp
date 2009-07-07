@@ -227,3 +227,50 @@ RESULT. Unsafe."
     (dim 2)
     (dim 3)
     result))
+
+;;;; VECTOR/SCALAR DIVISION
+
+(defknown %vec/ (vec vec single-float) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%vec/)
+  (:translate %vec/)
+  (:policy :fast-safe)
+  (:args (result-vector :scs (descriptor-reg) :target result)
+         (vector :scs (descriptor-reg))
+         (float :scs (single-reg)))
+  (:arg-types * * single-float)
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) tmp)
+  (:temporary (:sc single-reg) floats)
+  (:generator 10
+    ;; Load vector into TMP
+    (load-row tmp vector)
+    ;; Fill XMM reg with the float.
+    (inst movss floats float)
+    (inst unpcklps floats floats)
+    (inst unpcklps floats floats)
+    ;; Divide
+    (inst divps tmp floats)
+    ;; Save result to source vector
+    (store-row tmp result-vector)
+    (move result result-vector)))
+
+#-sb-cga-sse2
+(declaim (inline %vec/))
+(defun %vec/ (result a f)
+  "Divide VEC A by single float F, store result in VEC RESULT. Return RESULT.
+Unsafe."
+  (declare (optimize (speed 3) (safety 0) (debug 0) (sb-c::recognize-self-calls 0)))
+  #+sb-cga-sse2
+  (%vec/ result a f)
+  #-sb-cga-sse2
+  (macrolet ((dim (n)
+               `(setf (aref result ,n) (/ (aref a ,n) f))))
+    (dim 0)
+    (dim 1)
+    (dim 2)
+    (dim 3)
+    result))

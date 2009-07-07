@@ -30,6 +30,7 @@
    #:vec* #:%vec*
    #:vec+ #:%vec+
    #:vec- #:%vec-
+   #:vec/ #:%vec/
    #:vec=
    #:vecp
    #:vector3
@@ -51,13 +52,7 @@
   (:use :cl :sb-c :sb-int :sb-cga)
   #+sb-cga-sse2
   (:import-from :sb-vm
-                ;; General purpose stuff
                 #:inst
                 #:descriptor-reg
                 #:single-reg
-                ;; Instruction names
-                #:test
-                #:cmpps
-                #:movmskps
-                #:movaps
                 ))

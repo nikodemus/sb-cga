@@ -29,7 +29,7 @@
 ******* DONE VEC+, %VEC+
 ******* DONE VEC-, %VEC-
 ******* DONE VEC*, %VEC*
-******* TODO VEC/, %VEC/
+******* DONE VEC/, %VEC/
 ******* TODO DOT-PRODUCT
 ******* TODO HADAMARD-PRODUCT
 ******* TODO VEC-LENGTH
