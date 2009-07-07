@@ -31,7 +31,7 @@
 ******* DONE VEC*, %VEC*
 ******* DONE VEC/, %VEC/
 ******* DONE DOT-PRODUCT
-******* TODO HADAMARD-PRODUCT
+******* DONE HADAMARD-PRODUCT, %HADAMARD-PRODUCT
 ******* TODO VEC-LENGTH
 ******* TODO VEC-LERP
 ******* TODO NORMALIZE, %NORMALIZE, simple compiler macro.

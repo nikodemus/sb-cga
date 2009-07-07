@@ -138,3 +138,10 @@ VEC."
 (defun dot-product (a b)
   "Compute dot product VEC A and VEC B."
   (sb-cga-vm:%dot-product a b))
+
+(declaim (ftype (sfunction (vec vec) vec) hadamard-product)
+         (inline hadamard-product))
+(defun hadamard-product (a b)
+  "Compute hadamard product (elementwise product) of VEC A and VEC B,
+return result as a freshly allocated VEC."
+  (%hadamard-product (alloc-vec) a b))

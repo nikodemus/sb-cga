@@ -318,3 +318,44 @@ Unsafe."
     (macrolet ((dim (n)
                  `(* (aref a ,n) (aref b ,n))))
       (+ (dim 0) (dim 1) (dim 2) (dim 3)))))
+
+;;;; HADAMARD PRODUCT
+
+(defknown %hadamard-product (vec vec vec) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%hadamard-product)
+  (:translate %hadamard-product)
+  (:policy :fast-safe)
+  (:args (result-vector :scs (descriptor-reg) :target result)
+         (vector1 :scs (descriptor-reg))
+         (vector2 :scs (descriptor-reg)))
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) tmp)
+  (:generator 10
+    ;; Load vector into TMP
+    (load-row tmp vector1)
+    ;; Multiply elementwise
+    (inst mulps tmp (ea-for-row vector2))
+    ;; Result
+    (store-row tmp result-vector)
+    (move result result-vector)))
+
+#-sb-cga-sse2
+(declaim (inline %hadamard-product))
+(defun %hadamard-product (result a b)
+  "Compute hadamard product (elementwise product) of VEC A and VEC B, store
+result in VEC RESULT. Return RESULT. Unsafe."
+  (declare (optimize (speed 3) (safety 0) (debug 0) (sb-c::recognize-self-calls 0)))
+  #+sb-cga-sse2
+  (%hadamard-product result a b)
+  #-sb-cga-sse2
+  (macrolet ((dim (n)
+               `(setf (aref result ,n) (* (aref a ,n) (aref b ,n)))))
+    (dim 0)
+    (dim 1)
+    (dim 2)
+    (dim 3)
+    result))

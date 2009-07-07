@@ -23,6 +23,7 @@
    #:alloc-vec
    #:copy-vec #:%copy-vec
    #:dot-product
+   #:hadamard-product #:%hadamard-product
    #:matrix
    #:point
    #:point->vector3

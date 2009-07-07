@@ -173,3 +173,16 @@
     (is (= 0.0 (dot-product (vec 0.0 0.0 0.0 0.0)
                             (vec 1.1 2.2 3.3 4.4))))
   t)
+
+(deftest hadamard-product.1
+    (is (vec= (vec 1.2 4.0 10.0 3.0)
+              (hadamard-product (vec 0.1 1.0 4.0 1.5)
+                                (vec 12.0 4.0 2.5 2.0))))
+  t)
+
+(deftest %hadamard-product.1
+    (is (vec= (vec 1.2 4.0 10.0 3.0)
+              (%hadamard-product (alloc-vec)
+                                 (vec 0.1 1.0 4.0 1.5)
+                                 (vec 12.0 4.0 2.5 2.0))))
+  t)
