@@ -46,7 +46,7 @@
 (deftype vector3 ()
   "3D vector type: subtype of VEC consisting of those VECs whose 4th element
 is 0.0."
-  `(satisfied vector3p))
+  `(satisfies vector3p))
 
 ;;;; CONSTRUCTORS
 
@@ -76,20 +76,18 @@ is 0.0."
 
 ;;;; CONVERSIONS
 
-(declaim (ftype (sfunction (vec) vec) point->vector3)
+(declaim (ftype (sfunction (point) vec) point->vector3)
          (inline point->vector3))
 (defun point->vector3 (point)
-  "Return 3D vector corresponding to coordinates of POINT. Outside safe code
-4th element of POINT is not asserted to be 1.0."
-  (safe-check (pointp point))
+  "Return 3D vector corresponding to coordinates of POINT. May signal a TYPE-ERROR
+if POINT is not a proper point with 4th element 1.0"
   (vector3 (aref point 0) (aref point 1) (aref point 2)))
 
-(declaim (ftype (sfunction (vec) vec) vector3->point)
+(declaim (ftype (sfunction (vector3) vec) vector3->point)
          (inline vector3->point))
 (defun vector3->point (location)
-  "Return point for corresponding to the 3D vector LOCATION. Outside safe code
-4th element of LOCATION is not asserted to be 0.0."
-  (safe-check (vector3p location))
+  "Return point for corresponding to the 3D vector LOCATION. May signal a TYPE-ERROR
+if LOCATION is not a proper 3D vector with 4th element 0.0"
   (point (aref location 0) (aref location 1) (aref location 2)))
 
 ;;;; COMPARISON

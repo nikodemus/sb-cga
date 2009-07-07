@@ -22,5 +22,4 @@
   ((:file "package")
    (:file "types" :depends-on ("package"))
    (:file "vm" :depends-on ("package"))
-   (:file "utils" :depends-on ("package"))
-   (:file "vec" :depends-on ("package" "types" "utils" "vm"))))
+   (:file "vec" :depends-on ("package" "types" "vm"))))

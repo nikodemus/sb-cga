@@ -28,6 +28,7 @@
    #:point->vector3
    #:pointp
    #:vec
+   #:vec=
    #:vecp
    #:vector3
    #:vector3->point
