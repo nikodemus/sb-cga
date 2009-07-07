@@ -99,3 +99,11 @@ is 0.0."
 (defun vec= (a b)
   "Return true if VEC A and VEC B are elementwise identical."
   (sb-cga-vm:%vec= a b))
+
+;;;; COPYING
+
+(declaim (ftype (sfunction (vec) vec) copy-vec)
+         (inline copy-vec))
+(defun copy-vec (vec)
+  "Allocate a fresh copy of VEC."
+  (%copy-vec (alloc-vec) vec))

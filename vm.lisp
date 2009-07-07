@@ -62,3 +62,41 @@
     (macrolet ((dim (n)
                  `(= (aref a ,n) (aref b ,n))))
       (and (dim 0) (dim 1) (dim 2) (dim 3)))))
+
+;;;; VECTOR COPYING
+
+(defknown %copy-vec (vec vec) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%copy-vec)
+  (:translate %copy-vec)
+  (:policy :fast-safe)
+  (:args (result-vector :scs (descriptor-reg) :target result)
+         (vector :scs (descriptor-reg)))
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) tmp)
+  (:generator 10
+    ;; Load vector into TMP
+    (load-row tmp vector)
+    ;; Save copy to source vector
+    (store-row tmp result-vector)
+    ;; Ensure result
+    (move result result-vector)))
+
+#-sb-cga-sse2
+(declaim (inline %copy-vec))
+(defun %copy-vec (result vec)
+  "Copy contents of VEC into RESULT, return RESULT. Unsafe."
+  (declare (optimize (speed 3) (safety 0) (debug 0) (sb-c::recognize-self-calls 0)))
+  #+sb-cga-sse2
+  (%copy-vec result vec)
+  #-sb-cga-sse2
+  (macrolet ((dim (n)
+               `(setf (aref result ,n) (aref vec ,n))))
+    (dim 0)
+    (dim 1)
+    (dim 2)
+    (dim 3)
+    result))

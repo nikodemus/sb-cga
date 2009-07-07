@@ -11,14 +11,16 @@
 *** TODO VEC
 ***** DONE VEC type
 ***** TODO Predicates
+******* TODO Tests
 ******* DONE VECP
 ******* DONE POINTP
 ******* DONE VECTOR3P
 ******* DONE VEC=
 ***** TODO Constructors & copiers
+******* TODO Tests
 ******* DONE ALLOC-VEC
 ******* DONE VEC
-******* TODO COPY-VEC, %COPY-VEC
+******* DONE COPY-VEC, %COPY-VEC
 ******* DONE POINT
 ******* DONE VECTOR3
 ******* DONE POINT->VECTOR3
