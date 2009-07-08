@@ -23,7 +23,7 @@
 (declaim (ftype (sfunction (matrix (integer 0 3) (integer 0 3)) single-float) mref)
          (inline mref))
 (defun mref (matrix row column)
-  "Return value in the specificed ROW and COLUMN in MATRIX."
+  "Accessor for value in the specificed ROW and COLUMN in MATRIX."
   (aref matrix (+ row (* column 4))))
 
 (declaim (inline (setf mref)))
@@ -109,16 +109,23 @@ major order.)"
 (declaim (ftype (sfunction (&rest matrix) matrix) matrix*))
 (defun matrix* (&rest matrices)
   "Multiply MATRICES, return result as a freshly allocated MATRIX."
-  (if matrices
-      (let ((result (replace (zero-matrix) (the matrix (car matrices)))))
-        (dolist (matrix (cdr matrices))
-          (dotimes (i 4)
-            (dotimes (j 4)
-              (setf (mref result i j)
-                    (loop for k below 4
-                          summing (* (mref result i k) (mref matrix k j)))))))
-        result)
-      (identity-matrix)))
+  (labels ((mul (left more)
+             (if more
+                 (let ((right (pop more))
+                       (result (zero-matrix)))
+                   (dotimes (i 4)
+                     (dotimes (j 4)
+                       (setf (mref result i j)
+                             (loop for k below 4
+                                   summing (* (mref left i k) (mref right k j))))))
+                   (mul result more))
+                 left)))
+    (cond ((not matrices)
+           (identity-matrix))
+          ((cdr matrices)
+           (mul (car matrices) (cdr matrices)))
+          (t
+           (car matrices)))))
 
 ;;;; TRANSFORMATIONS
 
@@ -153,32 +160,32 @@ scaling factors."
 (declaim (ftype (sfunction (single-float single-float) matrix) rotate))
 (defun rotate* (x y z)
   "Construct a rotation matrix from rotation factors X, Y, Z."
-  (let (rotations)
-    (unless (= 0.0 x)
-      (let ((c (cos x))
-            (s (sin x)))
-        (push (matrix 1.0   0.0   0.0    0.0
-                      0.0   c     (- s)  0.0
-                      0.0   s     c      0.0
-                      0.0   0.0   0.0    1.0)
-              rotations)))
-    (unless (= 0.0 y)
-      (let ((c (cos y))
-            (s (sin y)))
-        (push (matrix c     0.0   s      0.0
-                      0.0   1.0   0.0    0.0
-                      (- s) 0.0   c      0.0
-                      0.0   0.0   0.0    1.0)
-              rotations)))
+  (let ((rotate (identity-matrix)))
     (unless (= 0.0 z)
       (let ((c (cos z))
             (s (sin z)))
-        (push (matrix c     (- s) 0.0    0.0
-                      s     c     0.0    0.0
-                      0.0   0.0   1.0    0.0
-                      0.0   0.0   0.0    1.0)
-              rotations)))
-    (apply #'matrix* rotations)))
+        (setf rotate (matrix* rotate
+                              (matrix c     (- s) 0.0    0.0
+                                      s     c     0.0    0.0
+                                      0.0   0.0   1.0    0.0
+                                      0.0   0.0   0.0    1.0)))))
+    (unless (= 0.0 y)
+      (let ((c (cos y))
+            (s (sin y)))
+        (setf rotate (matrix* rotate
+                              (matrix c     0.0   s      0.0
+                                      0.0   1.0   0.0    0.0
+                                      (- s) 0.0   c      0.0
+                                      0.0   0.0   0.0    1.0)))))
+    (unless (= 0.0 x)
+      (let ((c (cos x))
+            (s (sin x)))
+        (setf rotate (matrix* rotate
+                              (matrix 1.0   0.0   0.0    0.0
+                                      0.0   c     (- s)  0.0
+                                      0.0   s     c      0.0
+                                      0.0   0.0   0.0    1.0)))))
+    rotate))
 
 (declaim (ftype (sfunction (vec) matrix) rotate))
 (defun rotate (vec)

@@ -21,6 +21,7 @@
   :components
   ((:file "package")
    (:file "types" :depends-on ("package"))
-   (:file "vm" :depends-on ("package"))
-   (:file "vec" :depends-on ("package" "types" "vm"))
-   (:file "matrix" :depends-on ("package" "types" "vm"))))
+   (:file "vm1" :depends-on ("package"))
+   (:file "vm2" :depends-on ("package" "vm1"))
+   (:file "vec" :depends-on ("package" "types" "vm1" "vm2"))
+   (:file "matrix" :depends-on ("package" "types" "vm1" "vm2"))))

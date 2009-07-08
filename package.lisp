@@ -28,6 +28,7 @@
    #:identity-matrix
    #:inverse-matrix
    #:matrix
+   #:matrix*
    #:matrix=
    #:matrixp
    #:mref
@@ -51,6 +52,7 @@
    #:vec-min
    #:vec/ #:%vec/
    #:vec=
+   #:vec~
    #:vecp
    #:vector3
    #:vector3->point

@@ -113,14 +113,6 @@ if POINT is not a proper point with 4th element 1.0"
 if LOCATION is not a proper 3D vector with 4th element 0.0"
   (point (aref location 0) (aref location 1) (aref location 2)))
 
-;;;; COMPARISON
-
-(declaim (ftype (sfunction (vec vec) boolean) vec=)
-         (inline vec=))
-(defun vec= (a b)
-  "Return true if VEC A and VEC B are elementwise identical."
-  (sb-cga-vm:%vec= a b))
-
 ;;;; COPYING
 
 (declaim (ftype (sfunction (vec) vec) copy-vec)
@@ -237,4 +229,22 @@ allocated VEC."
              (- (* a3 b1) (* a1 b3))
              (- (* a1 b2) (* a2 b1)))))
 
+;;;; COMPARISON
+
+(declaim (ftype (sfunction (vec vec) boolean) vec=)
+         (inline vec=))
+(defun vec= (a b)
+  "Return true if VEC A and VEC B are elementwise identical."
+  (sb-cga-vm:%vec= a b))
+
+(declaim (ftype (sfunction (vec vec &optional single-float) boolean) vec~))
+(defun vec~ (a b &optional (epsilon single-float-epsilon))
+  "Return true if VEC A and VEC B are elementwise within EPSILON of each other.
+EPSILON defaults to SINGLE-FLOAT-EPSILON."
+  (let ((-e (- epsilon))
+        (d (vec- a b)))
+    (declare (dynamic-extent d))
+    (macrolet ((dim (n)
+                 `(<= -e (aref d ,n) epsilon)))
+      (and (dim 0) (dim 1) (dim 2) (dim 3)))))
 

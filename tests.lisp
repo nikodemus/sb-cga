@@ -16,7 +16,8 @@
 ;;;; TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ;;;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-(require :sb-rt)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (require :sb-rt))
 
 (defpackage :sb-cga-test
   (:use :cl :sb-rt :sb-cga))
@@ -24,14 +25,14 @@
 (in-package :sb-cga-test)
 
 ;;; Cheap, cheap.
-(defmacro is ((test result (op &rest args)))
+(defmacro is ((test result (op &rest args) &rest test-args))
   (let* ((temps (sb-int:make-gensym-list (length args)))
          (form `(,op ,@args))
          (lambda1 `(lambda ,temps (,op ,@temps)))
          (lambda2 `(lambda () (,op ,@args))))
-    `(and (,test ,result (eval ',form))
-          (,test ,result (funcall (compile nil ',lambda1) ,@args))
-          (,test ,result (funcall (compile nil ',lambda2)))
+    `(and (,test ,result (eval ',form) ,@test-args)
+          (,test ,result (funcall (compile nil ',lambda1) ,@args) ,@test-args)
+          (,test ,result (funcall (compile nil ',lambda2)) ,@test-args)
           t)))
 
 (deftest alloc-vec.1
@@ -40,7 +41,7 @@
   t)
 
 (deftest vecp.1
-    (vecp (alloc-vector))
+    (vecp (alloc-vec))
   t)
 
 (deftest vecp.2
@@ -57,6 +58,18 @@
                       (vec 1.0 1.0 1.0 1.0))))
   t)
 
+(deftest vec~.1
+    (vec~ (vec 1.1 2.1 3.1 3.9)
+          (vec 1.0 2.0 3.0 4.0)
+          0.100001)
+  t)
+
+(deftest vec~.2
+    (vec~ (vec 1.1 2.1 3.1 3.9)
+          (vec 1.0 2.0 3.0 4.0)
+          0.1)
+  nil)
+
 (deftest copy-vec.1
     (let* ((orig (vec 1.0 2.0 3.0 4.0))
            (copy (copy-vec orig)))
@@ -64,7 +77,7 @@
            (vec= orig copy)))
   t)
 
-(deftest %copy-vec.2
+(deftest %copy-vec.1
     (let* ((orig (vec 1.0 2.0 3.0 4.0))
            (other (vec 0.1 0.2 0.3 0.4))
            (copy (%copy-vec other orig)))
@@ -73,7 +86,7 @@
            (vec= copy orig)))
   t)
 
-(deftest %copy-vec.3
+(deftest %copy-vec.2
     (is (vec= (vec 1.0 0.1 3.0 4.0)
               (%copy-vec (alloc-vec) (vec 1.0 0.1 3.0 4.0))))
   t)
@@ -248,3 +261,163 @@
                              (vector3 0.0 1.0 0.0))))
   t)
 
+(deftest mref.1
+    (let ((m (matrix 1.0 2.0 3.0 4.0
+                     5.0 6.0 7.0 8.0
+                     9.0 10.0 11.0 12.0
+                     13.0 14.0 15.0 16.0)))
+      (setf (mref m 2 0) (- 9.0))
+      (values (mref m 2 0)
+              (mref m 2 1)
+              (mref m 1 2)
+              (mref m 1 3)))
+  -9.0
+  10.0
+  7.0
+  8.0)
+
+(deftest matrixp.1
+    (values (matrixp 1.0)
+            (matrixp (vector3 1.0 2.0 3.0))
+            (matrixp (zero-matrix)))
+  nil
+  nil
+  t)
+
+(deftest matrix=
+    (values (matrix= (zero-matrix) (identity-matrix))
+            (matrix= (matrix 1.0 2.0 3.0 4.0
+                             4.0 6.0 7.0 8.0
+                             9.0 10.0 11.0 12.0
+                             13.0 14.0 15.0 16.0)
+                     (matrix 1.0 2.0 3.0 4.0
+                             4.0 6.0 7.0 8.0
+                             9.0 10.0 11.0 12.0
+                             13.0 14.0 15.0 16.0)))
+  nil
+  t)
+
+(deftest translate.1
+    (is (vec= (point 1.0 2.0 3.0)
+              (transform-vec (point 0.0 0.0 0.0)
+                             (translate (vector3 1.0 2.0 3.0)))))
+  t)
+
+(deftest translate.2
+    (is (vec= (point 1.1 2.2 3.3)
+              (transform-vec (point 0.1 0.2 0.3)
+                             (translate (vector3 1.0 2.0 3.0)))))
+  t)
+
+(deftest translate.3
+    (is (vec= (vector3 0.0 0.0 0.0)
+              (transform-vec (vector3 0.0 0.0 0.0)
+                             (translate (vector3 1.0 2.0 3.0)))))
+  t)
+
+(deftest scale.1
+    (is (vec= (point 1.0 2.0 3.0)
+              (transform-vec (point 0.5 4.0 1.0)
+                             (scale (vector3 2.0 0.5 3.0)))))
+  t)
+
+(deftest scale.2
+    (is (vec= (vector3 1.0 2.0 3.0)
+              (transform-vec (vector3 0.5 4.0 1.0)
+                             (scale (vector3 2.0 0.5 3.0)))))
+  t)
+
+(defun random-matrix (&optional (scale 1.0))
+  (let ((m (zero-matrix)))
+    (dotimes (i 4)
+      (dotimes (j 4)
+        (setf (mref m i j) (random scale))))
+    m))
+
+(deftest matrix*.1
+    (let ((r (random-matrix))
+          (i (identity-matrix)))
+      (values (matrix= r (matrix* r i))
+              (matrix= r (matrix* i r))))
+  t t)
+
+(deftest matrix*.2
+    (let* ((scale (scale* 1.0 2.0 2.0))
+           (trans (translate* -1.0 -2.0 -4.0)))
+      (declare (optimize (debug 3)))
+      (values (vec= (point 1.0 4.0 4.0)
+                    (transform-vec (point 1.0 1.0 1.0) (matrix* scale scale)))
+              (vec= (point -1.0 -3.0 -7.0)
+                    (transform-vec (point 1.0 1.0 1.0) (matrix* trans trans)))
+              (vec= (point 0.0 -2.0 -6.0)
+                    (transform-vec (point 1.0 1.0 1.0) (matrix* scale trans)))
+              (vec= (point -1.0 -4.0 -10.0)
+                    (transform-vec (point 1.0 1.0 1.0) (matrix* trans scale trans)))))
+  t t t t)
+
+(defconstant +pi+ (coerce pi 'single-float))
+
+(deftest rotate.1
+    ;; One at a time.
+    (values (is (vec= (point 1.0 0.0 0.0)
+                      (transform-vec (point 1.0 0.0 0.0)
+                                     (rotate (vector3 3.0 0.0 0.0)))))
+            (is (vec= (vector3 1.0 0.0 0.0)
+                      (transform-vec (vector3 1.0 0.0 0.0)
+                                     (rotate (vector3 3.0 0.0 0.0)))))
+            (is (vec~ (point -1.0 0.0 0.0)
+                      (transform-vec (point 1.0 0.0 0.0)
+                                     (rotate (vector3 0.0 +pi+ 0.0)))
+                      0.0000001))
+            (is (vec~ (vector3 -1.0 0.0 0.0)
+                      (transform-vec (vector3 1.0 0.0 0.0)
+                                     (rotate (vector3 0.0 +pi+ 0.0)))
+                      0.0000001))
+            (is (vec~ (point -1.0 0.0 0.0)
+                      (transform-vec (point 1.0 0.0 0.0)
+                                     (rotate (vector3 0.0 0.0 +pi+)))
+                      0.0000001))
+            (is (vec~ (vector3 -1.0 0.0 0.0)
+                      (transform-vec (vector3 1.0 0.0 0.0)
+                                     (rotate (vector3 0.0 0.0 +pi+)))
+                      0.0000001)))
+  t t
+  t t
+  t t)
+
+(deftest rotate.2
+    ;; Order of rotations should be x, y ,z
+    (values ;; Explicit order
+     (is (vec~ (point 0.0 1.0 0.0)
+               (transform-vec
+                (transform-vec
+                 (transform-vec (point 0.0 1.0 0.0)
+                                (rotate* (/ +pi+ 4) 0.0 0.0))
+                 (rotate* 0.0 (/ +pi+ 2) 0.0))
+                (rotate* 0.0 0.0 (/ +pi+ 4)))
+               0.00001))
+     ;; Same thing with implicit order
+     (is (vec~ (point 0.0 1.0 0.0)
+               (transform-vec (point 0.0 1.0 0.0)
+                              (rotate* (/ +pi+ 4) (/ +pi+ 2) (/ +pi+ 4)))
+               0.000001)))
+  t t)
+
+(deftest rotate-around.1
+    (values (vec~ (point -1.0 0.0 0.0)
+                  (transform-vec (point 1.0 0.0 0.0)
+                                 (rotate-around (vector3 0.0 1.0 0.0) +pi+))
+                  0.00001)
+            (vec~ (point 0.0 -1.0 0.0)
+                  (transform-vec (point 0.0 1.0 0.0)
+                                 (rotate-around (vector3 1.0 0.0 0.0) +pi+))
+                  0.00001)
+            (vec~ (point 0.0 -1.0 0.0)
+                  (transform-vec (point 0.0 1.0 0.0)
+                                 (rotate-around (vector3 0.0 0.0 1.0) +pi+))
+                  0.00001)
+            (vec~ (point 0.0 1.0 0.0)
+                  (transform-vec (point 1.0 0.0 0.0)
+                                 (rotate-around (normalize (vector3 1.0 1.0 0.0)) +pi+))
+                  0.00001))
+  t t t t)
