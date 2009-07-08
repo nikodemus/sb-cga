@@ -38,7 +38,7 @@
    #:mref
    #:normalize #:%normalize
    #:point
-   #:point->vector3
+   #:point->vec3
    #:pointp
    #:reorient
    #:rotate #:rotate*
@@ -57,9 +57,9 @@
    #:vec/ #:%vec/
    #:vec=
    #:vecp
-   #:vector3
-   #:vector3->point
-   #:vector3p
+   #:vec3
+   #:vec3->point
+   #:vec3p
    #:vec~
    #:zero-matrix
    )
