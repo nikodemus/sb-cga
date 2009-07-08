@@ -36,10 +36,11 @@
    #:point->vector3
    #:pointp
    #:reorient
+   #:rotate #:rotate*
    #:rotate-around
-   #:scale
-   #:translate
+   #:scale #:scale*
    #:transform-vec #:%transform-vec
+   #:translate #:translate*
    #:vec
    #:vec* #:%vec*
    #:vec+ #:%vec+

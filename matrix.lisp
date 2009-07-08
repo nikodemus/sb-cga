@@ -98,23 +98,95 @@ major order.)"
           0.0 0.0 1.0 0.0
           0.0 0.0 0.0 1.0))
 
-(declaim (ftype (sfunction (vec) matrix) translation-matrix))
-(defun translate (a)
-  "Construct a translation matrix from VEC A. 4th element is ignored."
-  (matrix 1.0 0.0 0.0 (aref a 0)
-          0.0 1.0 0.0 (aref a 1)
-          0.0 0.0 1.0 (aref a 2)
+;;;; MATRIX MULTIPLICATION
+
+(declaim (ftype (sfunction (vec matrix) vec) transform-vec)
+         (inline transform-vec))
+(defun transform-vec (vec matrix)
+  "Apply transformation MATRIX to VEC, return result as a freshly allocated VEC."
+  (%transform-vec (alloc-vec) vec matrix))
+
+(declaim (ftype (sfunction (&rest matrix) matrix) matrix*))
+(defun matrix* (&rest matrices)
+  "Multiply MATRICES, return result as a freshly allocated MATRIX."
+  (if matrices
+      (let ((result (replace (zero-matrix) (the matrix (car matrices)))))
+        (dolist (matrix (cdr matrices))
+          (dotimes (i 4)
+            (dotimes (j 4)
+              (setf (mref result i j)
+                    (loop for k below 4
+                          summing (* (mref result i k) (mref matrix k j)))))))
+        result)
+      (identity-matrix)))
+
+;;;; TRANSFORMATIONS
+
+(declaim (ftype (sfunction (single-float single-float single-float) matrix) translate*))
+(defun translate* (x y z)
+  "Construct a translation matrix from translation factors X, Y and Z."
+  (matrix 1.0 0.0 0.0 x
+          0.0 1.0 0.0 y
+          0.0 0.0 1.0 z
           0.0 0.0 0.0 1.0))
 
-(declaim (ftype (sfunction (vec) matrix) scaling-matrix))
-(defun scale (a)
-  "Construct a scaling matrix from VEC A. 4th element is ignored."
-  (matrix (aref a 0)  0.0         0.0        0.0
-          0.0         (aref a 1)  0.0         0.0
-          0.0         0.0         (aref a 2)  0.0
-          0.0         0.0         0.0         1.0))
+(declaim (ftype (sfunction (vec) matrix) translate))
+(defun translate (vec)
+  "Construct a translation matrix using first three elements of VEC as the
+translation factors."
+  (translate* (aref vec 0) (aref vec 1) (aref vec 2)))
 
-(declaim (ftype (sfunction (vec single-float) rotate-around)))
+(declaim (ftype (sfunction (single-float single-float single-float) matrix) scale*))
+(defun scale* (x y z)
+  "Construct a scaling matrix from scaling factors X, Y, and Z."
+  (matrix x    0.0  0.0  0.0
+          0.0  y    0.0  0.0
+          0.0  0.0  z    0.0
+          0.0  0.0  0.0  1.0))
+
+(declaim (ftype (sfunction (vec) matrix) scale))
+(defun scale (vec)
+  "Construct a scaling matrix using first threee elements of VEC as the
+scaling factors."
+  (scale* (aref vec 0) (aref vec 1) (aref vec 2)))
+
+(declaim (ftype (sfunction (single-float single-float) matrix) rotate))
+(defun rotate* (x y z)
+  "Construct a rotation matrix from rotation factors X, Y, Z."
+  (let (rotations)
+    (unless (= 0.0 x)
+      (let ((c (cos x))
+            (s (sin x)))
+        (push (matrix 1.0   0.0   0.0    0.0
+                      0.0   c     (- s)  0.0
+                      0.0   s     c      0.0
+                      0.0   0.0   0.0    1.0)
+              rotations)))
+    (unless (= 0.0 y)
+      (let ((c (cos y))
+            (s (sin y)))
+        (push (matrix c     0.0   s      0.0
+                      0.0   1.0   0.0    0.0
+                      (- s) 0.0   c      0.0
+                      0.0   0.0   0.0    1.0)
+              rotations)))
+    (unless (= 0.0 z)
+      (let ((c (cos z))
+            (s (sin z)))
+        (push (matrix c     (- s) 0.0    0.0
+                      s     c     0.0    0.0
+                      0.0   0.0   1.0    0.0
+                      0.0   0.0   0.0    1.0)
+              rotations)))
+    (apply #'matrix* rotations)))
+
+(declaim (ftype (sfunction (vec) matrix) rotate))
+(defun rotate (vec)
+  "Construct a rotation matrix using first three elements of VEC as the
+rotation factors."
+  (rotate* (aref vec 0) (aref vec 1) (aref vec 2)))
+
+(declaim (ftype (sfunction (vec single-float) matrix) rotate-around))
 (defun rotate-around (a radians)
   "Construct a rotation matrix that rotates by RADIANS around VEC A. 4th
 element of A is ignored."
@@ -165,9 +237,9 @@ for orthogonality or affinness."
           (y (mref matrix 1 3))
           (z (mref matrix 2 3)))
       (dotimes (i 3)
-        (setf (inverse i 3) (- (+ (* x (mref inverse i 0))
-                                  (* y (mref inverse i 1))
-                                  (* z (mref inverse i 2)))))))
+        (setf (mref inverse i 3) (- (+ (* x (mref inverse i 0))
+                                       (* y (mref inverse i 1))
+                                       (* z (mref inverse i 2)))))))
     ;; affine bottom row (0 0 0 1)
     (dotimes (i 3)
       (setf (mref inverse 3 i) 0.0))
@@ -182,11 +254,3 @@ for orthogonality or affinness."
       (dotimes (j 4)
 	(setf (mref transpose i j) (mref matrix j i))))
     transpose))
-
-;;;; MATRIX MULTIPLICATION
-
-(declaim (ftype (sfunction (vec matrix) vec) transform-vec)
-         (inline transform-vec))
-(defun transform-vec (vec matrix)
-  "Apply transformation MATRIX to VEC, return result as a freshly allocated VEC."
-  (%transform-vec (alloc-vec) vec matrix))

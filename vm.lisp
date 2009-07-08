@@ -20,15 +20,15 @@
 
 #+sb-cga-sse2
 (progn
-  (defmacro ea-for-row (vector &optional (index 0))
+  (defmacro ea-for-slice (vector &optional (index 0))
     `(sb-vm::make-ea :dword :base ,vector
                      :disp (- (+ (* sb-vm:vector-data-offset sb-vm:n-word-bytes)
                                  (* ,index (/ 4 (/ sb-vm:n-word-bytes 4)) sb-vm:n-word-bytes))
                               sb-vm:other-pointer-lowtag)))
-  (defmacro load-row (xmm vector &optional (index 0))
-    `(inst movaps ,xmm (ea-for-row ,vector ,index)))
-  (defmacro store-row (xmm vector &optional (index 0))
-    `(inst movaps (ea-for-row ,vector ,index) ,xmm)))
+  (defmacro load-slice (xmm vector &optional (index 0))
+    `(inst movaps ,xmm (ea-for-slice ,vector ,index)))
+  (defmacro store-slice (xmm vector &optional (index 0))
+    `(inst movaps (ea-for-slice ,vector ,index) ,xmm)))
 
 ;;;; VECTOR COMPARISON
 
@@ -48,9 +48,9 @@
     (:temporary (:sc descriptor-reg) mask)
     (:generator 10
       ;; Load vector into TMP
-      (load-row tmp vector1)
+      (load-slice tmp vector1)
       ;; Compare
-      (inst cmpps :neq tmp (ea-for-row vector2))
+      (inst cmpps :neq tmp (ea-for-slice vector2))
       ;; Grab sign bits & check for zero.
       (inst movmskps mask tmp)
       (inst test mask mask)))
@@ -79,9 +79,9 @@
   (:temporary (:sc single-reg) tmp)
   (:generator 10
     ;; Load vector into TMP
-    (load-row tmp vector)
+    (load-slice tmp vector)
     ;; Save copy to source vector
-    (store-row tmp result-vector)
+    (store-slice tmp result-vector)
     (move result result-vector)))
 
 #-sb-cga-sse2
@@ -117,11 +117,11 @@
   (:temporary (:sc single-reg) tmp)
   (:generator 10
     ;; Load vector into TMP
-    (load-row tmp vector1)
+    (load-slice tmp vector1)
     ;; Add
-    (inst addps tmp (ea-for-row vector2))
+    (inst addps tmp (ea-for-slice vector2))
     ;; Save result to source vector
-    (store-row tmp result-vector)
+    (store-slice tmp result-vector)
     (move result result-vector)))
 
 #-sb-cga-sse2
@@ -157,11 +157,11 @@
   (:temporary (:sc single-reg) tmp)
   (:generator 10
     ;; Load vector into TMP
-    (load-row tmp vector1)
+    (load-slice tmp vector1)
     ;; Sub
-    (inst subps tmp (ea-for-row vector2))
+    (inst subps tmp (ea-for-slice vector2))
     ;; Save result to source vector
-    (store-row tmp result-vector)
+    (store-slice tmp result-vector)
     (move result result-vector)))
 
 #-sb-cga-sse2
@@ -200,7 +200,7 @@ Unsafe."
   (:temporary (:sc single-reg) floats)
   (:generator 10
     ;; Load vector into TMP
-    (load-row tmp vector)
+    (load-slice tmp vector)
     ;; Fill XMM reg with the float.
     (inst movss floats float)
     (inst unpcklps floats floats)
@@ -208,7 +208,7 @@ Unsafe."
     ;; Multiply
     (inst mulps tmp floats)
     ;; Save result to result vector
-    (store-row tmp result-vector)
+    (store-slice tmp result-vector)
     (move result result-vector)))
 
 #-sb-cga-sse2
@@ -247,7 +247,7 @@ RESULT. Unsafe."
   (:temporary (:sc single-reg) floats)
   (:generator 10
     ;; Load vector into TMP
-    (load-row tmp vector)
+    (load-slice tmp vector)
     ;; Fill XMM reg with the float.
     (inst movss floats float)
     (inst unpcklps floats floats)
@@ -255,7 +255,7 @@ RESULT. Unsafe."
     ;; Divide
     (inst divps tmp floats)
     ;; Save result to source vector
-    (store-row tmp result-vector)
+    (store-slice tmp result-vector)
     (move result result-vector)))
 
 #-sb-cga-sse2
@@ -293,9 +293,9 @@ Unsafe."
   (:temporary (:sc single-reg) tmp2)
   (:generator 10
     ;; Load vector into TMP
-    (load-row tmp vector1)
+    (load-slice tmp vector1)
     ;; Multiply elementwise
-    (inst mulps tmp (ea-for-row vector2))
+    (inst mulps tmp (ea-for-slice vector2))
     ;; Get low half into high half of a copy
     (inst movlhps tmp2 tmp)
     ;; First two additions -- result in high half of tmp2
@@ -336,11 +336,11 @@ Unsafe."
   (:temporary (:sc single-reg) tmp)
   (:generator 10
     ;; Load vector into TMP
-    (load-row tmp vector1)
+    (load-slice tmp vector1)
     ;; Multiply elementwise
-    (inst mulps tmp (ea-for-row vector2))
+    (inst mulps tmp (ea-for-slice vector2))
     ;; Result
-    (store-row tmp result-vector)
+    (store-slice tmp result-vector)
     (move result result-vector)))
 
 #-sb-cga-sse2
@@ -376,7 +376,7 @@ result in VEC RESULT. Return RESULT. Unsafe."
   (:temporary (:sc single-reg) tmp2)
   (:generator 10
     ;; Load vector into TMP
-    (load-row tmp vector)
+    (load-slice tmp vector)
     ;; Multiply elementwise
     (inst mulps tmp tmp)
     ;; Get low half into high half of a copy
@@ -422,7 +422,7 @@ result in VEC RESULT. Return RESULT. Unsafe."
   (:temporary (:sc single-reg) tmp3)
   (:generator 10
     ;; Load vector into TMP and TMP2
-    (load-row tmp vector)
+    (load-slice tmp vector)
     (inst movaps tmp3 tmp)
     ;; Multiply elementwise
     (inst mulps tmp tmp)
@@ -446,7 +446,7 @@ result in VEC RESULT. Return RESULT. Unsafe."
     ;; Divide original
     (inst divps tmp3 tmp)
     ;; Store result
-    (store-row tmp3 result-vector)
+    (store-slice tmp3 result-vector)
     (move result result-vector)))
 
 #-sb-cga-sse2
@@ -491,8 +491,8 @@ result in VEC RESULT. Return RESULT. Unsafe."
   (:temporary (:sc single-reg) 1-floats)
   (:generator 10
     ;; Load vectors
-    (load-row tmp vector1)
-    (load-row tmp2 vector2)
+    (load-slice tmp vector1)
+    (load-slice tmp2 vector2)
     ;; Fill XMM reg with the float.
     (inst movss floats float)
     (inst unpcklps floats floats)
@@ -508,7 +508,7 @@ result in VEC RESULT. Return RESULT. Unsafe."
     ;; Add
     (inst addps tmp tmp2)
     ;; Save result and return
-    (store-row tmp result-vector)
+    (store-slice tmp result-vector)
     (move result result-vector)))
 
 #-sb-cga-sse2
@@ -542,29 +542,45 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
          (matrix :scs (descriptor-reg)))
   (:results (result :scs (descriptor-reg)))
   (:temporary (:sc single-reg) vec)
-  (:temporary (:sc single-reg) row1)
-  (:temporary (:sc single-reg) row2)
-  (:temporary (:sc single-reg) row3)
-  (:temporary (:sc single-reg) row4)
+  (:temporary (:sc single-reg) tmp)
+  (:temporary (:sc single-reg) col1)
+  (:temporary (:sc single-reg) col2)
+  (:temporary (:sc single-reg) col3)
+  (:temporary (:sc single-reg) col4)
   (:note "oops")
   (:generator 10
     ;; Load stuff
-    (load-row vec vector)
-    (load-row row1 matrix 0)
-    (load-row row2 matrix 1)
-    (load-row row3 matrix 2)
-    (load-row row4 matrix 3)
-    ;; Multiply each row by vector
-    (inst mulps row1 vec)
-    (inst mulps row2 vec)
-    (inst mulps row3 vec)
-    (inst mulps row4 vec)
-    ;; Add result -- ends up in row1
-    (inst addps row1 row2)
-    (inst addps row3 row4)
-    (inst addps row1 row3)
+    (load-slice vec vector)
+    (load-slice col1 matrix 0)
+    (load-slice col2 matrix 1)
+    (load-slice col3 matrix 2)
+    (load-slice col4 matrix 3)
+    ;; Distribute vec[0] and multiply
+    (inst movaps tmp vec)
+    (inst unpckhps tmp tmp)
+    (inst unpckhps tmp tmp)
+    (inst mulps col4 tmp)
+    ;; Distribute vec[1] and multiply
+    (inst movaps tmp vec)
+    (inst unpckhps tmp tmp)
+    (inst unpcklps tmp tmp)
+    (inst mulps col3 tmp)
+    ;; Distribute vec[2] and multiply
+    (inst movaps tmp vec)
+    (inst unpcklps tmp tmp)
+    (inst unpckhps tmp tmp)
+    (inst mulps col2 tmp)
+    ;; Distribute vec[3] and multiply
+    (inst movaps tmp vec)
+    (inst unpcklps tmp tmp)
+    (inst unpcklps tmp tmp)
+    (inst mulps col1 tmp)
+    ;; Add rows
+    (inst addps col1 col2)
+    (inst addps col3 col4)
+    (inst addps col1 col3)
     ;; Store result
-    (store-row row1 result-vector)
+    (store-slice col1 result-vector)
     (move result result-vector)))
 
 #-sb-cga-sse2

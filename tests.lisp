@@ -247,3 +247,4 @@
               (cross-product (vector3 1.0 0.0 0.0)
                              (vector3 0.0 1.0 0.0))))
   t)
+
