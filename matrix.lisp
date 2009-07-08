@@ -62,6 +62,15 @@
     (unless (= (aref a i) (aref b i))
       (return nil))))
 
+(declaim (ftype (sfunction (matrix matrix &optional single-float) boolean) matrix~))
+(defun matrix= (a b &optional (epsilon +default-epsilon+))
+  "Return true if MATRIX A and MATRIX B are elementwise within EPSILON of each other.
+EPSILON defaults to +DEFAULT-EPSILON+"
+  (let ((-e (- epsilon)))
+    (dotimes (i 16 t)
+      (unless (<= -e (- (aref a i) (aref b i)) epsilon)
+        (return nil)))))
+
 ;;;; CONSTRUCTORS
 
 (declaim (ftype (sfunction (single-float single-float single-float single-float
@@ -227,9 +236,11 @@ element of A is ignored."
 ;;; FIXME: Proper inversion, not just this single case, maybe?
 (declaim (ftype (sfunction (matrix) matrix) inverse-matrix))
 (defun inverse-matrix (matrix)
-  "Inverse of an orthogonal affine 4x4 matrix. The argument is not checked
-for orthogonality or affinness."
+  "Inverse of an affine 4x4 matrix."
   (declare (type matrix matrix))
+  (unless (and (= 0.0 (mref matrix 3 0) (mref matrix 3 1) (mref matrix 3 2))
+               (= 1.0 (mref matrix 3 3)))
+    (error "Cannot invert: not an affine matrix: ~A" matrix))
   (let ((inverse (zero-matrix)))
     ;; transpose and invert scales for upper 3x3
     (dotimes (i 3)

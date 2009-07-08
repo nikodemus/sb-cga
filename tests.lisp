@@ -334,6 +334,14 @@
         (setf (mref m i j) (random scale))))
     m))
 
+(defun random-affine-matrix (&optional (scale 1.0))
+  (let ((m (zero-matrix)))
+    (dotimes (i 3)
+      (dotimes (j 4)
+        (setf (mref m i j) (random scale))))
+    (setf (mref m 3 3) 1.0)
+    m))
+
 (deftest matrix*.1
     (let ((r (random-matrix))
           (i (identity-matrix)))
@@ -409,3 +417,16 @@
                   (transform-vec (point 1.0 0.0 0.0)
                                  (rotate-around (normalize (vector3 1.0 1.0 0.0)) +pi+))))
   t t t t)
+
+(deftest reorient.1
+    (vec~ (normalize (vector3 1.0 1.0 0.5))
+          (transform-vec (vector3 1.0 0.0 0.0)
+                         (reorient (vector3 1.0 0.0 0.0)
+                                   (vector3 1.0 1.0 0.5))))
+  t)
+
+(deftest inverse-matrix.1
+    (let* ((m (random-affine-matrix))
+           (m^-1 (inverse-matrix m)))
+      (matrix~ (identity-matrix) (matrix* m m^-1)))
+  t)

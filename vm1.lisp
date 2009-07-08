@@ -231,7 +231,7 @@
 (progn
   (declaim (inline %dot-product))
   (defun %dot-product (a b)
-    (declare (optimize (speed 3) (safety 0) (debug 0)))
+    (declare (optimize (speed 3) (safety 0) (debug 1)))
     (macrolet ((dim (n)
                  `(* (aref a ,n) (aref b ,n))))
       (+ (dim 0) (dim 1) (dim 2) (dim 3)))))
@@ -298,7 +298,7 @@
 (progn
   (declaim (inline %vec-length))
   (defun %vec-length (a)
-    (declare (optimize (speed 3) (safety 0) (debug 0)))
+    (declare (optimize (speed 3) (safety 0) (debug 1)))
     (macrolet ((dim (n)
                  `(let ((d (aref a ,n)))
                      (* d d))))

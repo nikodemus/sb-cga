@@ -33,6 +33,7 @@
    #:matrix*
    #:matrix=
    #:matrixp
+   #:matrix~
    #:mref
    #:normalize #:%normalize
    #:point
