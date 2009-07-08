@@ -39,3 +39,9 @@ to a point produces a point, etc."
   "4x4 matrix of single floats, represented as a one-dimensional vector stored
 in column-major order."
   `(simple-array single-float (16)))
+
+(defconstant +default-epsilon+ 0.0000001
+  "Used as a liminal value to work around floating point inaccuracy.")
+
+(defconstant +pi+ (coerce pi 'single-float)
+  "Single-float PI.")

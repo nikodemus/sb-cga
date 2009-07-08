@@ -35,7 +35,7 @@
 (deftype point ()
   "Point type: subtype of VEC consisting of those VECs whose 4th element is
 1.0."
-  `(satisfies pointp))
+  `(and vec (satisfies pointp)))
 
 (declaim (ftype (sfunction (t) boolean) vector3p)
          (inline vector3p))
@@ -46,7 +46,7 @@
 (deftype vector3 ()
   "3D vector type: subtype of VEC consisting of those VECs whose 4th element
 is 0.0."
-  `(satisfies vector3p))
+  `(and vec (satisfies vector3p)))
 
 ;;;; PRETTY PRINTING
 
@@ -99,18 +99,20 @@ is 0.0."
 
 ;;;; CONVERSIONS
 
-(declaim (ftype (sfunction (point) vec) point->vector3)
+(declaim (ftype (sfunction (vec) vec) point->vector3)
          (inline point->vector3))
 (defun point->vector3 (point)
-  "Return 3D vector corresponding to coordinates of POINT. May signal a TYPE-ERROR
+  "Return 3D vector corresponding to coordinates of POINT. Signals a TYPE-ERROR
 if POINT is not a proper point with 4th element 1.0"
+  (check-type point point)
   (vector3 (aref point 0) (aref point 1) (aref point 2)))
 
-(declaim (ftype (sfunction (vector3) vec) vector3->point)
+(declaim (ftype (sfunction (vec) vec) vector3->point)
          (inline vector3->point))
 (defun vector3->point (location)
-  "Return point for corresponding to the 3D vector LOCATION. May signal a TYPE-ERROR
+  "Return point for corresponding to the 3D vector LOCATION. Signals a TYPE-ERROR
 if LOCATION is not a proper 3D vector with 4th element 0.0"
+  (check-type location vector3)
   (point (aref location 0) (aref location 1) (aref location 2)))
 
 ;;;; COPYING
@@ -213,12 +215,14 @@ VEC."
         (dim 3)))
     result))
 
-(declaim (ftype (sfunction (vector3 vector3) vec) cross-product)
+(declaim (ftype (sfunction (vec vec) vec) cross-product)
          (inline cross-product))
 (defun cross-product (a b)
   "Cross product of 3D vector A and 3D vector B, return result as a freshly
 allocated VEC."
-  (declare (type vector a b) (optimize speed))
+  (declare (optimize speed))
+  (check-type a vector3)
+  (check-type b vector3)
   (let ((a1 (aref a 0))
         (a2 (aref a 1))
         (a3 (aref a 2))
@@ -238,9 +242,9 @@ allocated VEC."
   (sb-cga-vm:%vec= a b))
 
 (declaim (ftype (sfunction (vec vec &optional single-float) boolean) vec~))
-(defun vec~ (a b &optional (epsilon single-float-epsilon))
+(defun vec~ (a b &optional (epsilon +default-epsilon+))
   "Return true if VEC A and VEC B are elementwise within EPSILON of each other.
-EPSILON defaults to SINGLE-FLOAT-EPSILON."
+EPSILON defaults to +DEFAULT-EPSILON+."
   (let ((-e (- epsilon))
         (d (vec- a b)))
     (declare (dynamic-extent d))

@@ -157,7 +157,7 @@ translation factors."
 scaling factors."
   (scale* (aref vec 0) (aref vec 1) (aref vec 2)))
 
-(declaim (ftype (sfunction (single-float single-float) matrix) rotate))
+(declaim (ftype (sfunction (single-float single-float single-float) matrix) rotate*))
 (defun rotate* (x y z)
   "Construct a rotation matrix from rotation factors X, Y, Z."
   (let ((rotate (identity-matrix)))
@@ -216,8 +216,7 @@ element of A is ignored."
   "Construct a transformation matrix to reorient A with B."
   (let ((na (normalize a))
 	(nb (normalize b)))
-    ;; FIXME: Use a looser equality here, maybe.
-    (if (vec= na nb)
+    (if (vec~ na nb)
 	(identity-matrix)
 	(rotate-around (normalize (cross-product na nb))
 		       (acos (dot-product na nb))))))

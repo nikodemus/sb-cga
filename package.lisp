@@ -20,6 +20,8 @@
   (:documentation
    "Computer graphics algebra package for SBCL.")
   (:export
+   #:+default-epsilon+
+   #:+pi+
    #:alloc-vec
    #:copy-vec #:%copy-vec
    #:cross-product
@@ -52,11 +54,11 @@
    #:vec-min
    #:vec/ #:%vec/
    #:vec=
-   #:vec~
    #:vecp
    #:vector3
    #:vector3->point
    #:vector3p
+   #:vec~
    #:zero-matrix
    )
   (:use :cl :sb-int))
