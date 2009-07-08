@@ -31,6 +31,7 @@
    #:inverse-matrix
    #:matrix
    #:matrix*
+   #:matrix-determinant
    #:matrix=
    #:matrixp
    #:matrix~

@@ -38,6 +38,7 @@
 ******* DONE VEC-MIN, VEC-MAX
 ******* DONE CROSS-PRODUCT
 *** TODO MATRIX
+***** TODO Separate transform type, used double-floats in matrices.
 ***** TODO Tests
 ***** DONE TRANSFORM-VEC, %TRANSFORM-VEC
 ***** DONE MATRIX type

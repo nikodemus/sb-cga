@@ -99,16 +99,14 @@ is 0.0."
 
 ;;;; CONVERSIONS
 
-(declaim (ftype (sfunction (vec) vec) point->vector3)
-         (inline point->vector3))
+(declaim (ftype (sfunction (vec) vec) point->vector3))
 (defun point->vector3 (point)
   "Return 3D vector corresponding to coordinates of POINT. Signals a TYPE-ERROR
 if POINT is not a proper point with 4th element 1.0"
   (check-type point point)
   (vector3 (aref point 0) (aref point 1) (aref point 2)))
 
-(declaim (ftype (sfunction (vec) vec) vector3->point)
-         (inline vector3->point))
+(declaim (ftype (sfunction (vec) vec) vector3->point))
 (defun vector3->point (location)
   "Return point for corresponding to the 3D vector LOCATION. Signals a TYPE-ERROR
 if LOCATION is not a proper 3D vector with 4th element 0.0"
@@ -215,8 +213,7 @@ VEC."
         (dim 3)))
     result))
 
-(declaim (ftype (sfunction (vec vec) vec) cross-product)
-         (inline cross-product))
+(declaim (ftype (sfunction (vec vec) vec) cross-product))
 (defun cross-product (a b)
   "Cross product of 3D vector A and 3D vector B, return result as a freshly
 allocated VEC."
