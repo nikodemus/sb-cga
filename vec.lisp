@@ -26,92 +26,19 @@
   "Return true if OBJECT is a VEC.."
   (typep object 'vec))
 
-(declaim (ftype (sfunction (t) boolean) pointp)
-         (inline pointp))
-(defun pointp (object)
-  "Return true if OBJECT is a point."
-  (and (vecp object) (= 1.0 (aref object 3))))
-
-(deftype point ()
-  "Point type: subtype of VEC consisting of those VECs whose 4th element is
-1.0."
-  `(and vec (satisfies pointp)))
-
-(declaim (ftype (sfunction (t) boolean) vec3p)
-         (inline vec3p))
-(defun vec3p (object)
-  "Return true if OBJECT is a 3D vector."
-  (and (vecp object) (= 0.0 (aref object 3))))
-
-(deftype vec3 ()
-  "3D vector type: subtype of VEC consisting of those VECs whose 4th element
-is 0.0."
-  `(and vec (satisfies vec3p)))
-
-;;;; PRETTY PRINTING
-
-(defun pprint-vec (stream vec)
-  (print-unreadable-object (vec stream :type nil :identity nil)
-    (cond ((vec3p vec)
-           (format stream "Vec3 ~s, ~s, ~s"
-                   (aref vec 0)
-                   (aref vec 1)
-                   (aref vec 2)))
-          ((pointp vec)
-           (format stream "Point ~s, ~s, ~s"
-                   (aref vec 0)
-                   (aref vec 1)
-                   (aref vec 2)))
-          (t
-           (format stream "Vec ~s, ~s, ~s, ~s"
-                   (aref vec 0)
-                   (aref vec 1)
-                   (aref vec 2)
-                   (aref vec 3)))))
-  vec)
-(set-pprint-dispatch 'vec 'pprint-vec)
-
 ;;;; CONSTRUCTORS
 
 (declaim (ftype (sfunction () vec) alloc-vec)
          (inline alloc-vec))
 (defun alloc-vec ()
   "Allocate a zero-initialized VEC."
-  (make-array 4 :element-type 'single-float))
+  (make-array 3 :element-type 'single-float))
 
-(declaim (ftype (sfunction (single-float single-float single-float single-float) vec) vec)
+(declaim (ftype (sfunction (single-float single-float single-float) vec) vec)
          (inline vec))
-(defun vec (a b c d)
-  "Allocate 4D vector [A, B, C, D]."
-  (make-array 4 :element-type 'single-float :initial-contents (list a b c d)))
-
-(declaim (ftype (sfunction (single-float single-float single-float) vec) point)
-         (inline point))
-(defun point (x y z)
-  "Allocate point \(X,Y,Z)."
-  (vec x y z 1.0))
-
-(declaim (ftype (sfunction (single-float single-float single-float) vec) vec3)
-         (inline vec3))
-(defun vec3 (a b c)
-  "Allocate 3D vector [A,B,C]."
-  (vec a b c 0.0))
-
-;;;; CONVERSIONS
-
-(declaim (ftype (sfunction (vec) vec) point->vec3))
-(defun point->vec3 (point)
-  "Return 3D vector corresponding to coordinates of POINT. Signals a TYPE-ERROR
-if POINT is not a proper point with 4th element 1.0"
-  (check-type point point)
-  (vec3 (aref point 0) (aref point 1) (aref point 2)))
-
-(declaim (ftype (sfunction (vec) vec) vec3->point))
-(defun vec3->point (location)
-  "Return point for corresponding to the 3D vector LOCATION. Signals a TYPE-ERROR
-if LOCATION is not a proper 3D vector with 4th element 0.0"
-  (check-type location vec3)
-  (point (aref location 0) (aref location 1) (aref location 2)))
+(defun vec (a b c)
+  "Allocate 3D vector [A, B, C]."
+  (make-array 3 :element-type 'single-float :initial-contents (list a b c)))
 
 ;;;; COPYING
 
@@ -164,8 +91,7 @@ return result as a freshly allocated VEC."
 (declaim (ftype (sfunction (vec) single-float) vec-length)
          (inline vec-length))
 (defun vec-length (a)
-  "Length of VEC A. Note that the results are nonsensical for points: use
-first POINT->VEC3 if you need the distance of a point from origin."
+  "Length of VEC A."
   (sb-cga-vm:%vec-length a))
 
 (declaim (ftype (sfunction (vec) vec))
@@ -193,8 +119,7 @@ VEC."
                    `(setf (aref result ,n) (min (aref result ,n) (aref vec ,n)))))
         (dim 0)
         (dim 1)
-        (dim 2)
-        (dim 3)))
+        (dim 2)))
     result))
 
 (declaim (ftype (sfunction (vec &rest vec) vec) vec-max)
@@ -209,8 +134,7 @@ VEC."
                    `(setf (aref result ,n) (max (aref result ,n) (aref vec ,n)))))
         (dim 0)
         (dim 1)
-        (dim 2)
-        (dim 3)))
+        (dim 2)))
     result))
 
 (declaim (ftype (sfunction (vec vec) vec) cross-product))
@@ -218,17 +142,15 @@ VEC."
   "Cross product of 3D vector A and 3D vector B, return result as a freshly
 allocated VEC."
   (declare (optimize speed))
-  (check-type a vec3)
-  (check-type b vec3)
   (let ((a1 (aref a 0))
         (a2 (aref a 1))
         (a3 (aref a 2))
         (b1 (aref b 0))
         (b2 (aref b 1))
         (b3 (aref b 2)))
-    (vec3 (- (* a2 b3) (* a3 b2))
-          (- (* a3 b1) (* a1 b3))
-          (- (* a1 b2) (* a2 b1)))))
+    (vec (- (* a2 b3) (* a3 b2))
+         (- (* a3 b1) (* a1 b3))
+         (- (* a1 b2) (* a2 b1)))))
 
 ;;;; COMPARISON
 
@@ -247,5 +169,4 @@ EPSILON defaults to +DEFAULT-EPSILON+."
     (declare (dynamic-extent d))
     (macrolet ((dim (n)
                  `(<= -e (aref d ,n) epsilon)))
-      (and (dim 0) (dim 1) (dim 2) (dim 3)))))
-
+      (and (dim 0) (dim 1) (dim 2)))))

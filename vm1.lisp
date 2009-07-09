@@ -20,10 +20,17 @@
 
 #+sb-cga-sse2
 (progn
+  (defmacro ea-for-data (vector index)
+    `(sb-vm::make-ea :dword :base ,vector
+                     :disp (- (+ (* sb-vm:vector-data-offset sb-vm:n-word-bytes)
+                                 ;; 4 bytes per single-float
+                                 (* ,index 4))
+                              sb-vm:other-pointer-lowtag)))
   (defmacro ea-for-slice (vector &optional (index 0))
     `(sb-vm::make-ea :dword :base ,vector
                      :disp (- (+ (* sb-vm:vector-data-offset sb-vm:n-word-bytes)
-                                 (* ,index (/ 4 (/ sb-vm:n-word-bytes 4)) sb-vm:n-word-bytes))
+                                 ;; 4 bytes per single-float, 16 per slice.
+                                 (* ,index 16))
                               sb-vm:other-pointer-lowtag)))
   (defmacro load-slice (xmm vector &optional (index 0))
     `(inst movaps ,xmm (ea-for-slice ,vector ,index)))
@@ -37,23 +44,24 @@
 
 #+sb-cga-sse2
 (define-vop (%vec=)
-    (:translate %vec=)
-    (:policy :fast-safe)
-    (:args (vector1 :scs (descriptor-reg))
-           (vector2 :scs (descriptor-reg)))
-    (:conditional :e)
-    ;; FIXME: Because there is no plain XMM-REG SC, we abuse SINGLE-REG pretty
-    ;; horribly -- same for all the VOPs that follow.
-    (:temporary (:sc single-reg) tmp)
-    (:temporary (:sc descriptor-reg) mask)
-    (:generator 10
-      ;; Load vector into TMP
-      (load-slice tmp vector1)
-      ;; Compare
-      (inst cmpps :neq tmp (ea-for-slice vector2))
-      ;; Grab sign bits & check for zero.
-      (inst movmskps mask tmp)
-      (inst test mask mask)))
+  (:translate %vec=)
+  (:policy :fast-safe)
+  (:args (vector1 :scs (descriptor-reg))
+         (vector2 :scs (descriptor-reg)))
+  (:conditional :e)
+  ;; FIXME: Because there is no plain XMM-REG SC, we abuse SINGLE-REG pretty
+  ;; horribly -- same for all the VOPs that follow.
+  (:temporary (:sc single-reg) tmp)
+  (:temporary (:sc descriptor-reg) mask)
+  (:generator 10
+    ;; Load vector into TMP
+    (load-slice tmp vector1)
+    ;; Compare
+    (inst cmpps :neq tmp (ea-for-slice vector2))
+    ;; Grab sign bits, mask 4th elt & check for zero.
+    (inst movmskps mask tmp)
+    (inst and mask #b0111)
+    (inst test mask mask)))
 
 #-sb-cga-sse2
 (progn
@@ -61,7 +69,7 @@
   (defun %vec= (a b)
     (macrolet ((dim (n)
                  `(= (aref a ,n) (aref b ,n))))
-      (and (dim 0) (dim 1) (dim 2) (dim 3)))))
+      (and (dim 0) (dim 1) (dim 2)))))
 
 ;;;; VECTOR COPYING
 
@@ -206,35 +214,32 @@
   (:arg-types * *)
   (:results (result :scs (single-reg)))
   (:result-types single-float)
-  (:temporary (:sc single-reg) tmp)
   (:temporary (:sc single-reg) tmp2)
+  (:temporary (:sc single-reg) tmp3)
   (:generator 10
-    ;; Load vector into TMP
-    (load-slice tmp vector1)
-    ;; Multiply elementwise
-    (inst mulps tmp (ea-for-slice vector2))
-    ;; Get low half into high half of a copy
-    (inst movlhps tmp2 tmp)
-    ;; First two additions -- result in high half of tmp2
-    (inst addps tmp2 tmp)
-    ;; Low half of the result into first word of tmp2,
-    ;; and high half into third word of tmp2
-    (inst unpckhps tmp2 tmp2)
-    ;; High half of result into first word of tmp
-    (inst movaps tmp tmp2)
-    (inst unpckhps tmp tmp)
-    ;; Final addition
-    (inst addss tmp tmp2)
-    (inst movss result tmp)))
+    ;; SSE2 vectors ops aren't so hot for dot products,
+    ;; so this is just a hand-optimized non-vectorized
+    ;; version.
+    ;; Load elements of VECTOR1
+    (inst movss result (ea-for-data vector1 0))
+    (inst movss tmp2 (ea-for-data vector1 1))
+    (inst movss tmp3 (ea-for-data vector1 2))
+    ;; Multiply by elements of VECTOR2
+    (inst mulss result (ea-for-data vector2 0))
+    (inst mulss tmp2 (ea-for-data vector2 1))
+    (inst mulss tmp3 (ea-for-data vector2 2))
+    ;; Add
+    (inst addss result tmp2)
+    (inst addss result tmp3)))
 
 #-sb-cga-sse2
 (progn
   (declaim (inline %dot-product))
   (defun %dot-product (a b)
-    (declare (optimize (speed 3) (safety 0) (debug 1)))
+    (declare (optimize (speed 3) (safety 1) (debug 1)))
     (macrolet ((dim (n)
                  `(* (aref a ,n) (aref b ,n))))
-      (+ (dim 0) (dim 1) (dim 2) (dim 3)))))
+      (+ (dim 0) (dim 1) (dim 2)))))
 
 ;;;; HADAMARD PRODUCT
 
@@ -272,37 +277,29 @@
   (:args (vector :scs (descriptor-reg)))
   (:results (result :scs (single-reg)))
   (:result-types single-float)
-  (:temporary (:sc single-reg) tmp)
+  (:temporary (:sc single-reg) tmp1)
   (:temporary (:sc single-reg) tmp2)
   (:generator 10
-    ;; Load vector into TMP
-    (load-slice tmp vector)
-    ;; Multiply elementwise
-    (inst mulps tmp tmp)
-    ;; Get low half into high half of a copy
-    (inst movlhps tmp2 tmp)
-    ;; First addition -- result in high half of tmp2
-    (inst addps tmp2 tmp)
-    ;; Low half of the result into first word of tmp2,
-    ;; and high half into third word of tmp2
-    (inst unpckhps tmp2 tmp2)
-    ;; High half of result into first word of tmp
-    (inst movaps tmp tmp2)
-    (inst unpckhps tmp tmp)
-    ;; Final addition
-    (inst addss tmp tmp2)
-    ;; Square root into result
-    (inst sqrtss result tmp)))
+    ;; Again, vector ops not so hot -- so just hand-optimize.
+    (inst movss result (ea-for-data vector 0))
+    (inst movss tmp1 (ea-for-data vector 1))
+    (inst movss tmp2 (ea-for-data vector 2))
+    (inst mulss result result)
+    (inst mulss tmp1 tmp1)
+    (inst mulss tmp2 tmp2)
+    (inst addss result tmp1)
+    (inst addss result tmp2)
+    (inst sqrtss result result)))
 
 #-sb-cga-sse2
 (progn
   (declaim (inline %vec-length))
   (defun %vec-length (a)
-    (declare (optimize (speed 3) (safety 0) (debug 1)))
+    (declare (optimize (speed 3) (safety 1) (debug 1)))
     (macrolet ((dim (n)
                  `(let ((d (aref a ,n)))
                      (* d d))))
-      (sqrt (+ (dim 0) (dim 1) (dim 2) (dim 3))))))
+      (sqrt (+ (dim 0) (dim 1) (dim 2))))))
 
 ;;;; NORMALIZATION
 
@@ -317,36 +314,35 @@
   (:args (result-vector :scs (descriptor-reg) :target result)
          (vector :scs (descriptor-reg)))
   (:results (result :scs (descriptor-reg)))
-  (:temporary (:sc single-reg) tmp)
+  (:temporary (:sc single-reg) tmp1)
   (:temporary (:sc single-reg) tmp2)
   (:temporary (:sc single-reg) tmp3)
+  (:temporary (:sc single-reg) tmp4)
+  (:temporary (:sc single-reg) tmp5)
+  (:temporary (:sc single-reg) tmp6)
   (:generator 10
-    ;; Load vector into TMP and TMP2
-    (load-slice tmp vector)
-    (inst movaps tmp3 tmp)
-    ;; Multiply elementwise
-    (inst mulps tmp tmp)
-    ;; Get low half into high half of a copy
-    (inst movlhps tmp2 tmp)
-    ;; First addition -- result in high half of tmp2
-    (inst addps tmp2 tmp)
-    ;; Low half of the result into first word of tmp2,
-    ;; and high half into third word of tmp2
-    (inst unpckhps tmp2 tmp2)
-    ;; High half of result into first word of tmp
-    (inst movaps tmp tmp2)
-    (inst unpckhps tmp tmp)
-    ;; Final addition
-    (inst addss tmp tmp2)
-    ;; Square root
-    (inst sqrtss tmp tmp)
-    ;; Fill into tmp
-    (inst unpcklps tmp tmp)
-    (inst unpcklps tmp tmp)
+    ;; Load, keep two copies
+    (inst movss tmp1 (ea-for-data vector 0))
+    (inst movss tmp2 (ea-for-data vector 1))
+    (inst movss tmp3 (ea-for-data vector 2))
+    (inst movss tmp4 tmp1)
+    (inst movss tmp5 tmp2)
+    (inst movss tmp6 tmp3)
+    ;; Compute the length into tmp1
+    (inst mulss tmp1 tmp1)
+    (inst mulss tmp2 tmp2)
+    (inst mulss tmp3 tmp3)
+    (inst addss tmp1 tmp2)
+    (inst addss tmp1 tmp3)
+    (inst sqrtss tmp1 tmp1)
     ;; Divide original
-    (inst divps tmp3 tmp)
+    (inst divss tmp4 tmp1)
+    (inst divss tmp5 tmp1)
+    (inst divss tmp6 tmp1)
     ;; Store result
-    (store-slice tmp3 result-vector)
+    (inst movss (ea-for-data result-vector 0) tmp4)
+    (inst movss (ea-for-data result-vector 1) tmp5)
+    (inst movss (ea-for-data result-vector 2) tmp6)
     (move result result-vector)))
 
 ;;;; LINEAR INTERPOLATION
@@ -393,7 +389,7 @@
 
 ;;;; TRANSFORMING A VECTOR
 
-(defknown %transform-vec (vec vec matrix) vec
+(defknown %transform-vec (vec vec matrix single-float) vec
     (any #+sb-cga-sse2 always-translatable))
 
 (define-vop (%transform-vec)
@@ -401,7 +397,9 @@
   (:policy :fast-safe)
   (:args (result-vector :scs (descriptor-reg) :target result)
          (vector :scs (descriptor-reg))
-         (matrix :scs (descriptor-reg)))
+         (matrix :scs (descriptor-reg))
+         (w :scs (single-reg)))
+  (:arg-types * * * single-float)
   (:results (result :scs (descriptor-reg)))
   (:temporary (:sc single-reg) vec)
   (:temporary (:sc single-reg) tmp)
@@ -409,10 +407,14 @@
   (:temporary (:sc single-reg) col2)
   (:temporary (:sc single-reg) col3)
   (:temporary (:sc single-reg) col4)
-  (:note "oops")
   (:generator 10
     ;; Load stuff
     (load-slice vec vector)
+    ;; Put W into high word of VEC, dunno how to
+    ;; do this without the shuffle. :/
+    (inst movaps tmp vec)
+    (inst movss tmp w)
+    (inst shufps vec tmp #b00100100)
     (load-slice col1 matrix 0)
     (load-slice col2 matrix 1)
     (load-slice col3 matrix 2)

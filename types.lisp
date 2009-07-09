@@ -19,19 +19,8 @@
 (in-package :sb-cga)
 
 (deftype vec ()
-  "A 4D vector of single floats.
-
-Used by SB-CGA to represent 3D algebraic vectors (with 4th element of 0.0) and
-points (with 4th element of 1.0.) Elsewhere in the documentation, where a \"3D
-vector\" is referred to, it means a VEC with 4th element of 0.0, and similarly
-a \"point\" refers to a VEC with 4th element of 1.0.
-
-Vector operations operate on VECs as if they were 4D algebraic vectors, not as
-homogenous 3D vectors. However, as long as the operations themselves make
-sense, the result are consistent with them being homogenous vectors: addition
-of two 3D algebraic vectors produces a third one, adding an algebraic vector
-to a point produces a point, etc."
-  `(simple-array single-float (4)))
+  "A 3D vector of single floats."
+  `(simple-array single-float (3)))
 
 ;;; MATRIX TYPE, PREDICATES, and CONSTRUCTORS
 

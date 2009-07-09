@@ -109,11 +109,11 @@ major order.)"
 
 ;;;; MATRIX MULTIPLICATION
 
-(declaim (ftype (sfunction (vec matrix) vec) transform-vec)
+(declaim (ftype (sfunction (vec matrix single-float) vec) transform-vec)
          (inline transform-vec))
-(defun transform-vec (vec matrix)
+(defun transform-vec (vec matrix w)
   "Apply transformation MATRIX to VEC, return result as a freshly allocated VEC."
-  (%transform-vec (alloc-vec) vec matrix))
+  (%transform-vec (alloc-vec) vec matrix w))
 
 (declaim (ftype (sfunction (&rest matrix) matrix) matrix*))
 (defun matrix* (&rest matrices)
@@ -325,7 +325,12 @@ element of A is ignored."
        (* (a 1 4) (a 2 2) (a 3 3) (a 4 1))
        (* (a 1 4) (a 2 3) (a 3 1) (a 4 2)))))
 
+(eval-when (:compile-toplevel)
+  ;; The next baby wants this
+  (setf sb-ext:*inline-expansion-limit* 1000))
+
 (defun generic-inverse-matrix (matrix)
+  (break "generic")
   (let ((det (matrix-determinant matrix)))
     (if (< (abs det) +default-epsilon+)
         (error "Cannot invert matrix with zero determinant:~%  ~S"

@@ -37,15 +37,13 @@
    #:matrix~
    #:mref
    #:normalize #:%normalize
-   #:point
-   #:point->vec3
-   #:pointp
    #:reorient
    #:rotate #:rotate*
    #:rotate-around
    #:scale #:scale*
    #:transform-vec #:%transform-vec
    #:translate #:translate*
+   #:transpose-matrix
    #:vec
    #:vec* #:%vec*
    #:vec+ #:%vec+
@@ -57,9 +55,6 @@
    #:vec/ #:%vec/
    #:vec=
    #:vecp
-   #:vec3
-   #:vec3->point
-   #:vec3p
    #:vec~
    #:zero-matrix
    )
