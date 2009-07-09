@@ -330,7 +330,6 @@ element of A is ignored."
   (setf sb-ext:*inline-expansion-limit* 1000))
 
 (defun generic-inverse-matrix (matrix)
-  (break "generic")
   (let ((det (matrix-determinant matrix)))
     (if (< (abs det) +default-epsilon+)
         (error "Cannot invert matrix with zero determinant:~%  ~S"

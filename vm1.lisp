@@ -390,8 +390,10 @@
 ;;;; TRANSFORMING A VECTOR
 
 (defknown %transform-vec (vec vec matrix single-float) vec
-    (any #+sb-cga-sse2 always-translatable))
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
 
+#+sb-cga-sse2
 (define-vop (%transform-vec)
   (:translate %transform-vec)
   (:policy :fast-safe)

@@ -156,7 +156,7 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
   #-sb-cga-sse2
   (let ((f2 (- 1.0 f)))
     (macrolet ((dim (n)
-                 `(setf (aref result ,n) (+ (* f2 (aref a ,n)) (* f (aref b .b))))))
+                 `(setf (aref result ,n) (+ (* f2 (aref a ,n)) (* f (aref b ,n))))))
       (dim 0)
       (dim 1)
       (dim 2))
