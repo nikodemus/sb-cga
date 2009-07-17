@@ -188,7 +188,6 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
 
 ;;;; TRANSFORMING A VECTOR -- either as a point or a direction
 
-#-sb-cga-sse2
 (declaim (inline %transform-point))
 (defun %transform-point (result vec matrix)
   "Apply transformation MATRIX to VEC, store result in RESULT. Return RESULT. Unsafe."
@@ -210,7 +209,6 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
       (dim 2)
       result)))
 
-#-sb-cga-sse2
 (declaim (inline %transform-direction))
 (defun %transform-direction (result vec matrix)
   "Apply transformation MATRIX to VEC, store result in RESULT. Return RESULT. Unsafe."

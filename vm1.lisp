@@ -393,10 +393,6 @@
     (any #+sb-cga-sse2 always-translatable)
   :result-arg 0)
 
-(defknown (%transform-point %transform-direction) (vec vec matrix) vec
-    (any)
-  :result-arg 0)
-
 #+sb-cga-sse2
 (define-vop (%transform-vec)
   (:translate %transform-vec)
