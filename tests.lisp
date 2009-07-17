@@ -40,14 +40,6 @@
               (alloc-vec)))
   t)
 
-(deftest vecp.1
-    (vecp (alloc-vec))
-  t)
-
-(deftest vecp.2
-    (vecp (make-array 4 :element-type 'single-float))
-  nil)
-
 (deftest vec=.1
     (is (eq t (vec= (vec 1.0 1.0 1.0)
                     (vec 1.0 1.0 1.0))))
@@ -263,41 +255,35 @@
 
 (deftest translate.1
     (values (is (vec= (vec -1.0 2.0 3.0)
-                      (transform-vec (vec 0.0 0.0 0.0)
-                                     (translate (vec -1.0 2.0 3.0))
-                                     1.0)))
+                      (transform-point (vec 0.0 0.0 0.0)
+                                       (translate (vec -1.0 2.0 3.0)))))
             (is (vec= (vec 0.0 0.0 0.0)
-                      (transform-vec (vec 0.0 0.0 0.0)
-                                     (translate (vec -1.0 2.0 3.0))
-                                     0.0))))
+                      (transform-direction (vec 0.0 0.0 0.0)
+                                           (translate (vec -1.0 2.0 3.0))))))
   t t)
 
 (deftest translate.2
     (is (vec= (vec 1.1 2.2 3.3)
-              (transform-vec (vec 0.1 0.2 0.3)
-                             (translate (vec 1.0 2.0 3.0))
-                             1.0)))
+              (transform-point (vec 0.1 0.2 0.3)
+                               (translate (vec 1.0 2.0 3.0)))))
   t)
 
 (deftest translate.3
     (is (vec= (vec 0.0 0.0 0.0)
-              (transform-vec (vec 0.0 0.0 0.0)
-                             (translate (vec 1.0 2.0 3.0))
-                             0.0)))
+              (transform-direction (vec 0.0 0.0 0.0)
+                                   (translate (vec 1.0 2.0 3.0)))))
   t)
 
 (deftest scale.1
     (is (vec= (vec 1.0 2.0 3.0)
-              (transform-vec (vec 0.5 4.0 1.0)
-                             (scale (vec 2.0 0.5 3.0))
-                             1.0)))
+              (transform-point (vec 0.5 4.0 1.0)
+                               (scale (vec 2.0 0.5 3.0)))))
   t)
 
 (deftest scale.2
     (is (vec= (vec 1.0 2.0 3.0)
-              (transform-vec (vec 0.5 4.0 1.0)
-                             (scale (vec 2.0 0.5 3.0))
-                             0.0)))
+              (transform-direction (vec 0.5 4.0 1.0)
+                                   (scale (vec 2.0 0.5 3.0)))))
   t)
 
 (defun random-matrix (&optional (scale 1.0))
@@ -327,41 +313,35 @@
            (trans (translate* -1.0 -2.0 -4.0)))
       (declare (optimize (debug 3)))
       (values (vec= (vec 1.0 4.0 4.0)
-                    (transform-vec (vec 1.0 1.0 1.0) (matrix* scale scale) 1.0))
+                    (transform-point (vec 1.0 1.0 1.0) (matrix* scale scale)))
               (vec= (vec -1.0 -3.0 -7.0)
-                    (transform-vec (vec 1.0 1.0 1.0) (matrix* trans trans) 1.0))
+                    (transform-point (vec 1.0 1.0 1.0) (matrix* trans trans)))
               (vec= (vec 0.0 -2.0 -6.0)
-                    (transform-vec (vec 1.0 1.0 1.0) (matrix* scale trans) 1.0))
+                    (transform-point (vec 1.0 1.0 1.0) (matrix* scale trans)))
               (vec= (vec -1.0 -4.0 -10.0)
-                    (transform-vec (vec 1.0 1.0 1.0) (matrix* trans scale trans) 1.0))))
+                    (transform-point (vec 1.0 1.0 1.0) (matrix* trans scale trans)))))
   t t t t)
 
 (deftest rotate.1
     ;; One at a time.
     (values (is (vec= (vec 1.0 0.0 0.0)
-                      (transform-vec (vec 1.0 0.0 0.0)
-                                     (rotate (vec 3.0 0.0 0.0))
-                                     1.0)))
+                      (transform-point (vec 1.0 0.0 0.0)
+                                       (rotate (vec 3.0 0.0 0.0)))))
             (is (vec= (vec 1.0 0.0 0.0)
-                      (transform-vec (vec 1.0 0.0 0.0)
-                                     (rotate (vec 3.0 0.0 0.0))
-                                     1.0)))
+                      (transform-point (vec 1.0 0.0 0.0)
+                                       (rotate (vec 3.0 0.0 0.0)))))
             (is (vec~ (vec -1.0 0.0 0.0)
-                      (transform-vec (vec 1.0 0.0 0.0)
-                                     (rotate (vec 0.0 +pi+ 0.0))
-                                     1.0)))
+                      (transform-point (vec 1.0 0.0 0.0)
+                                       (rotate (vec 0.0 +pi+ 0.0)))))
             (is (vec~ (vec -1.0 0.0 0.0)
-                      (transform-vec (vec 1.0 0.0 0.0)
-                                     (rotate (vec 0.0 +pi+ 0.0))
-                                     1.0)))
+                      (transform-point (vec 1.0 0.0 0.0)
+                                       (rotate (vec 0.0 +pi+ 0.0)))))
             (is (vec~ (vec -1.0 0.0 0.0)
-                      (transform-vec (vec 1.0 0.0 0.0)
-                                     (rotate (vec 0.0 0.0 +pi+))
-                                     1.0)))
+                      (transform-point (vec 1.0 0.0 0.0)
+                                       (rotate (vec 0.0 0.0 +pi+)))))
             (is (vec~ (vec -1.0 0.0 0.0)
-                      (transform-vec (vec 1.0 0.0 0.0)
-                                     (rotate (vec 0.0 0.0 +pi+))
-                                     1.0))))
+                      (transform-point (vec 1.0 0.0 0.0)
+                                       (rotate (vec 0.0 0.0 +pi+))))))
   t t
   t t
   t t)
@@ -370,47 +350,38 @@
     ;; Order of rotations should be x, y ,z
     (values ;; Explicit order
      (is (vec~ (vec 0.0 1.0 0.0)
-               (transform-vec
-                (transform-vec
-                 (transform-vec (vec 0.0 1.0 0.0)
-                                (rotate* (/ +pi+ 4) 0.0 0.0)
-                                1.0)
-                 (rotate* 0.0 (/ +pi+ 2) 0.0)
-                 1.0)
-                (rotate* 0.0 0.0 (/ +pi+ 4))
-                1.0)))
+               (transform-point
+                (transform-point
+                 (transform-point (vec 0.0 1.0 0.0)
+                                  (rotate* (/ +pi+ 4) 0.0 0.0))
+                 (rotate* 0.0 (/ +pi+ 2) 0.0))
+                (rotate* 0.0 0.0 (/ +pi+ 4)))))
      ;; Same thing with implicit order
      (is (vec~ (vec 0.0 1.0 0.0)
-               (transform-vec (vec 0.0 1.0 0.0)
-                              (rotate* (/ +pi+ 4) (/ +pi+ 2) (/ +pi+ 4))
-                              1.0))))
+               (transform-point (vec 0.0 1.0 0.0)
+                                (rotate* (/ +pi+ 4) (/ +pi+ 2) (/ +pi+ 4))))))
   t t)
 
 (deftest rotate-around.1
     (values (vec~ (vec -1.0 0.0 0.0)
-                  (transform-vec (vec 1.0 0.0 0.0)
-                                 (rotate-around (vec 0.0 1.0 0.0) +pi+)
-                                 1.0))
+                  (transform-point (vec 1.0 0.0 0.0)
+                                   (rotate-around (vec 0.0 1.0 0.0) +pi+)))
             (vec~ (vec 0.0 -1.0 0.0)
-                  (transform-vec (vec 0.0 1.0 0.0)
-                                 (rotate-around (vec 1.0 0.0 0.0) +pi+)
-                                 1.0))
+                  (transform-point (vec 0.0 1.0 0.0)
+                                   (rotate-around (vec 1.0 0.0 0.0) +pi+)))
             (vec~ (vec 0.0 -1.0 0.0)
-                  (transform-vec (vec 0.0 1.0 0.0)
-                                 (rotate-around (vec 0.0 0.0 1.0) +pi+)
-                                 1.0))
+                  (transform-point (vec 0.0 1.0 0.0)
+                                   (rotate-around (vec 0.0 0.0 1.0) +pi+)))
             (vec~ (vec 0.0 1.0 0.0)
-                  (transform-vec (vec 1.0 0.0 0.0)
-                                 (rotate-around (normalize (vec 1.0 1.0 0.0)) +pi+)
-                                 1.0)))
+                  (transform-point (vec 1.0 0.0 0.0)
+                                   (rotate-around (normalize (vec 1.0 1.0 0.0)) +pi+))))
   t t t t)
 
 (deftest reorient.1
     (vec~ (normalize (vec 1.0 1.0 0.5))
-          (transform-vec (vec 1.0 0.0 0.0)
-                         (reorient (vec 1.0 0.0 0.0)
-                                   (vec 1.0 1.0 0.5))
-                         1.0))
+          (transform-point (vec 1.0 0.0 0.0)
+                           (reorient (vec 1.0 0.0 0.0)
+                                     (vec 1.0 1.0 0.5))))
   t)
 
 (deftest inverse-matrix.1

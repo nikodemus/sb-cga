@@ -416,31 +416,27 @@
   (:generator 10
     ;; Load stuff
     (load-slice vec vector)
-    ;; Put W into high word of VEC, dunno how to
-    ;; do this without the shuffle. :/
-    (inst movaps tmp vec)
-    (inst movss tmp w)
-    (inst shufps vec tmp #b00100100)
     (load-slice col1 matrix 0)
     (load-slice col2 matrix 1)
     (load-slice col3 matrix 2)
     (load-slice col4 matrix 3)
-    ;; Distribute vec[0] and multiply
-    (inst movaps tmp vec)
-    (inst unpckhps tmp tmp)
-    (inst unpckhps tmp tmp)
+    ;; Distribute W and multiply
+    (inst xorps tmp tmp)
+    (inst movss tmp w)
+    (inst unpcklps tmp tmp)
+    (inst unpcklps tmp tmp)
     (inst mulps col4 tmp)
-    ;; Distribute vec[1] and multiply
+    ;; Distribute vec[2] and multiply
     (inst movaps tmp vec)
     (inst unpckhps tmp tmp)
     (inst unpcklps tmp tmp)
     (inst mulps col3 tmp)
-    ;; Distribute vec[2] and multiply
+    ;; Distribute vec[1] and multiply
     (inst movaps tmp vec)
     (inst unpcklps tmp tmp)
     (inst unpckhps tmp tmp)
     (inst mulps col2 tmp)
-    ;; Distribute vec[3] and multiply
+    ;; Distribute vec[0] and multiply
     (inst movaps tmp vec)
     (inst unpcklps tmp tmp)
     (inst unpcklps tmp tmp)
