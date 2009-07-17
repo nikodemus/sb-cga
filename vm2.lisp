@@ -162,9 +162,32 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
       (dim 2))
     result))
 
+;;;; ELEMENTWISE MINIMUM AND MAXIMUM
+
+(declaim (ftype (sfunction (vec vec vec) vec) %vec-min)
+         (inline %vec-min))
+(defun %vec-min (result a b)
+  "Elementwise minimum of VEC A and VEC B, store result in VEC RESULT."
+  (macrolet ((dim (n)
+               `(setf (aref result ,n) (min (aref a ,n) (aref b ,n)))))
+    (dim 0)
+    (dim 1)
+    (dim 2))
+  result)
+
+(declaim (ftype (sfunction (vec vec vec) vec) %vec-max)
+         (inline %vec-max))
+(defun %vec-max (result a b)
+  "Elementwise maximum of VEC A and VEC B, store result in VEC RESULT."
+  (macrolet ((dim (n)
+               `(setf (aref result ,n) (max (aref a ,n) (aref b ,n)))))
+    (dim 0)
+    (dim 1)
+    (dim 2))
+  result)
+
 ;;;; TRANSFORMING A VECTOR -- either as a point or a direction
 
-(declaim (ftype (sfunction (vec vec matrix) vec) %transform-point))
 #-sb-cga-sse2
 (declaim (inline %transform-point))
 (defun %transform-point (result vec matrix)
@@ -187,7 +210,6 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
       (dim 2)
       result)))
 
-(declaim (ftype (sfunction (vec vec matrix) vec) %transform-direction))
 #-sb-cga-sse2
 (declaim (inline %transform-direction))
 (defun %transform-direction (result vec matrix)

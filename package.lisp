@@ -41,6 +41,7 @@
    #:rotate #:rotate*
    #:rotate-around
    #:scale #:scale*
+   #:transform-bounds
    #:transform-direction #:%transform-direction
    #:transform-point #:%transform-point
    #:translate #:translate*
@@ -51,8 +52,8 @@
    #:vec- #:%vec-
    #:vec-length
    #:vec-lerp #:%vec-lerp
-   #:vec-max
-   #:vec-min
+   #:vec-max #:%vec-min
+   #:vec-min #:%vec-max
    #:vec/ #:%vec/
    #:vec=
    #:vec~

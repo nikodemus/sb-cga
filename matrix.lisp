@@ -123,6 +123,29 @@ freshly allocated VEC."
 return result as a freshly allocated VEC."
   (%transform-direction (alloc-vec) vec matrix))
 
+(defun transform-bounds (a b matrix)
+  "Transform the axis-aligned bounding box specified by its extreme corners A
+and B using MATRIX. Return new extreme corners (minimum and maximum
+coordinates) as freshly allocted VECs, as the primary and secondary value."
+  ;; Naive method: transform all corners.
+  ;; See http://www.ics.uci.edu/~arvo/code/TransformingBoxes.c
+  ;; for a better way.
+  (let* ((min (transform-point a matrix))
+         (max (copy-vec min)))
+    (flet ((tran (i j k)
+             (let ((tmp (transform-point (vec i j k) matrix)))
+               (declare (dynamic-extent tmp))
+               (%vec-min min min tmp)
+               (%vec-max max max tmp))))
+      (tran (aref a 0) (aref a 1) (aref b 2))
+      (tran (aref a 0) (aref b 1) (aref a 2))
+      (tran (aref a 0) (aref b 1) (aref b 2))
+      (tran (aref b 0) (aref a 1) (aref a 2))
+      (tran (aref b 0) (aref a 1) (aref b 2))
+      (tran (aref b 0) (aref b 1) (aref a 2))
+      (tran (aref b 0) (aref b 1) (aref b 2)))
+    (values min max)))
+
 (declaim (ftype (sfunction (&rest matrix) matrix) matrix*))
 (defun matrix* (&rest matrices)
   "Multiply MATRICES, return result as a freshly allocated MATRIX."
