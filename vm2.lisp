@@ -188,12 +188,13 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
 
 ;;;; TRANSFORMING A VECTOR -- either as a point or a direction
 
+#-sb-cga-sse2
 (declaim (inline %transform-point))
 (defun %transform-point (result vec matrix)
   "Apply transformation MATRIX to VEC, store result in RESULT. Return RESULT. Unsafe."
   (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
   #+sb-cga-sse2
-  (%transform-vec result vec matrix 1.0)
+  (%transform-point result vec matrix)
   #-sb-cga-sse2
   (let ((a (aref vec 0))
         (b (aref vec 1))
@@ -209,12 +210,13 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
       (dim 2)
       result)))
 
+#-sb-cga-sse2
 (declaim (inline %transform-direction))
 (defun %transform-direction (result vec matrix)
   "Apply transformation MATRIX to VEC, store result in RESULT. Return RESULT. Unsafe."
   (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
   #+sb-cga-sse2
-  (%transform-vec result vec matrix 0.0)
+  (%transform-direction result vec matrix)
   #-sb-cga-sse2
   (let ((a (aref vec 0))
         (b (aref vec 1))

@@ -389,57 +389,83 @@
 
 ;;;; TRANSFORMING A VECTOR
 
-(defknown %transform-vec (vec vec matrix single-float) vec
-    (any #+sb-cga-sse2 always-translatable)
+(defknown %transform-point (vec vec matrix) vec
+    (any)
   :result-arg 0)
 
 #+sb-cga-sse2
-(define-vop (%transform-vec)
-  (:translate %transform-vec)
+(define-vop (%transform-point)
+  (:translate %transform-point)
   (:policy :fast-safe)
   (:args (result-vector :scs (descriptor-reg) :target result)
          (vector :scs (descriptor-reg))
-         (matrix :scs (descriptor-reg))
-         (w :scs (single-reg)))
-  (:arg-types * * * single-float)
+         (matrix :scs (descriptor-reg)))
   (:results (result :scs (descriptor-reg)))
   (:temporary (:sc single-reg) vec)
-  (:temporary (:sc single-reg) tmp)
   (:temporary (:sc single-reg) col1)
   (:temporary (:sc single-reg) col2)
   (:temporary (:sc single-reg) col3)
-  (:temporary (:sc single-reg) col4)
+  (:generator 10
+    (load-slice vec vector)
+    ;; Distribute vec[2] and multiply
+    (inst movaps col3 vec)
+    (inst unpckhps col3 col3)
+    (inst unpcklps col3 col3)
+    (inst mulps col3 (ea-for-slice matrix 2))
+    ;; Distribute vec[1] and multiply
+    (inst movaps col2 vec)
+    (inst unpcklps col2 col2)
+    (inst unpckhps col2 col2)
+    (inst mulps col2 (ea-for-slice matrix 1))
+    ;; Distribute vec[0] and multiply
+    (inst movaps col1 vec)
+    (inst unpcklps col1 col1)
+    (inst unpcklps col1 col1)
+    (inst mulps col1 (ea-for-slice matrix 0))
+    ;; Add rows -- including the translation column.
+    (inst addps col1 (ea-for-slice matrix 3))
+    (inst addps col3 col2)
+    (inst addps col1 col3)
+    ;; Store result
+    (store-slice col1 result-vector)
+    (move result result-vector)))
+
+(defknown %transform-direction (vec vec matrix) vec
+    (any)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%transform-direction)
+  (:translate %transform-direction)
+  (:policy :fast-safe)
+  (:args (result-vector :scs (descriptor-reg) :target result)
+         (vector :scs (descriptor-reg))
+         (matrix :scs (descriptor-reg)))
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) vec)
+  (:temporary (:sc single-reg) col1)
+  (:temporary (:sc single-reg) col2)
+  (:temporary (:sc single-reg) col3)
   (:generator 10
     ;; Load stuff
     (load-slice vec vector)
-    (load-slice col1 matrix 0)
-    (load-slice col2 matrix 1)
-    (load-slice col3 matrix 2)
-    (load-slice col4 matrix 3)
-    ;; Distribute W and multiply
-    (inst xorps tmp tmp)
-    (inst movss tmp w)
-    (inst unpcklps tmp tmp)
-    (inst unpcklps tmp tmp)
-    (inst mulps col4 tmp)
     ;; Distribute vec[2] and multiply
-    (inst movaps tmp vec)
-    (inst unpckhps tmp tmp)
-    (inst unpcklps tmp tmp)
-    (inst mulps col3 tmp)
+    (inst movaps col3 vec)
+    (inst unpckhps col3 col3)
+    (inst unpcklps col3 col3)
+    (inst mulps col3 (ea-for-slice matrix 2))
     ;; Distribute vec[1] and multiply
-    (inst movaps tmp vec)
-    (inst unpcklps tmp tmp)
-    (inst unpckhps tmp tmp)
-    (inst mulps col2 tmp)
+    (inst movaps col2 vec)
+    (inst unpcklps col2 col2)
+    (inst unpckhps col2 col2)
+    (inst mulps col2 (ea-for-slice matrix 1))
     ;; Distribute vec[0] and multiply
-    (inst movaps tmp vec)
-    (inst unpcklps tmp tmp)
-    (inst unpcklps tmp tmp)
-    (inst mulps col1 tmp)
-    ;; Add rows
+    (inst movaps col1 vec)
+    (inst unpcklps col1 col1)
+    (inst unpcklps col1 col1)
+    (inst mulps col1 (ea-for-slice matrix 0))
+    ;; Add rows -- except for translation.
     (inst addps col1 col2)
-    (inst addps col3 col4)
     (inst addps col1 col3)
     ;; Store result
     (store-slice col1 result-vector)
