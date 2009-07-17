@@ -18,14 +18,6 @@
 
 (in-package :sb-cga)
 
-;;;; PREDICATES AND SUBTYPES
-
-(declaim (ftype (sfunction (t) boolean) vecp)
-         (inline vecp))
-(defun vecp (object)
-  "Return true if OBJECT is a VEC.."
-  (typep object 'vec))
-
 ;;;; CONSTRUCTORS
 
 (declaim (ftype (sfunction () vec) alloc-vec)
@@ -53,13 +45,13 @@
 ;;;; ARITHMETIC
 
 (declaim (ftype (sfunction (vec vec) vec) vec+)
-         (notinline vec+))
+         (inline vec+))
 (defun vec+ (a b)
   "Add VEC A and VEC B, return result as a freshly allocated VEC."
   (%vec+ (alloc-vec) a b))
 
 (declaim (ftype (sfunction (vec vec) vec) vec-)
-         (notinline vec-))
+         (inline vec-))
 (defun vec- (a b)
   "Substract VEC B from VEC A, return result as a freshly allocated VEC."
   (%vec- (alloc-vec) a b))
@@ -105,7 +97,7 @@ return result as a freshly allocated VEC."
   (%normalize (alloc-vec) a))
 
 (declaim (ftype (sfunction (vec vec single-float) vec) vec-lerp)
-         (notinline vec-lerp))
+         (inline vec-lerp))
 (defun vec-lerp (a b f)
   "Linear interpolate VEC A and VEC B using single-float F as the
 interpolation factor, return result as a freshly allocated VEC."

@@ -41,7 +41,8 @@
    #:rotate #:rotate*
    #:rotate-around
    #:scale #:scale*
-   #:transform-vec #:%transform-vec
+   #:transform-direction #:%transform-direction
+   #:transform-point #:%transform-point
    #:translate #:translate*
    #:transpose-matrix
    #:vec
@@ -54,11 +55,11 @@
    #:vec-min
    #:vec/ #:%vec/
    #:vec=
-   #:vecp
    #:vec~
    #:zero-matrix
    )
-  (:use :cl :sb-int))
+  (:use :cl :sb-int)
+  (:lock t))
 
 ;;;; KLUDGE: SBCL doesn't currently have SSE2 feature, but it's cleaner to
 ;;;; conditionalize on a single feature (relevant once x86 gets SSE2
@@ -71,9 +72,10 @@
   (:export
    #:%dot-product
    #:%vec=
-   #:%vec-length
-   )
+   #:%vec-length)
   (:use :cl :sb-c :sb-int :sb-cga)
+  (:implement :sb-cga)
+  (:lock t)
   #+sb-cga-sse2
   (:import-from :sb-vm
                 #:inst

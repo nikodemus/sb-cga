@@ -109,11 +109,19 @@ major order.)"
 
 ;;;; MATRIX MULTIPLICATION
 
-(declaim (ftype (sfunction (vec matrix single-float) vec) transform-vec)
-         (inline transform-vec))
-(defun transform-vec (vec matrix w)
-  "Apply transformation MATRIX to VEC, return result as a freshly allocated VEC."
-  (%transform-vec (alloc-vec) vec matrix w))
+(declaim (ftype (sfunction (vec matrix) vec) transform-point)
+         (inline transform-point))
+(defun transform-point (vec matrix)
+  "Apply transformation MATRIX to VEC, return result as a
+freshly allocated VEC."
+  (%transform-point (alloc-vec) vec matrix))
+
+(declaim (ftype (sfunction (vec matrix) vec) transform-direction)
+         (inline transform-direction))
+(defun transform-direction (vec matrix)
+  "Apply transformation MATRIX to VEC ignoring the translation component,
+return result as a freshly allocated VEC."
+  (%transform-direction (alloc-vec) vec matrix))
 
 (declaim (ftype (sfunction (&rest matrix) matrix) matrix*))
 (defun matrix* (&rest matrices)
@@ -206,19 +214,26 @@ rotation factors."
 (defun rotate-around (a radians)
   "Construct a rotation matrix that rotates by RADIANS around VEC A. 4th
 element of A is ignored."
-  (let ((c (cos radians))
-	(s (sin radians))
-	(g (- 1.0 (cos radians))))
-    (let* ((x (aref a 0))
-           (y (aref a 1))
-           (z (aref a 2))
-           (gxx (* g x x)) (gxy (* g x y)) (gxz (* g x z))
-           (gyy (* g y y)) (gyz (* g y z)) (gzz (* g z z)))
-      (matrix
-       (+ gxx c)        (- gxy (* s z))  (+ gxz (* s y)) 0.0
-       (+ gxy (* s z))  (+ gyy c)        (- gyz (* s x)) 0.0
-       (- gxz (* s y))  (+ gyz (* s x))  (+ gzz c)       0.0
-       0.0              0.0              0.0             1.0))))
+  (cond ((vec= a (vec 1.0 0.0 0.0))
+         (rotate* radians 0.0 0.0))
+        ((vec= a (vec 0.0 1.0 0.0))
+         (rotate* 0.0 radians 0.0))
+        ((vec= a (vec 0.0 0.0 1.0))
+         (rotate* 0.0 0.0 radians))
+        (t
+         (let ((c (cos radians))
+               (s (sin radians))
+               (g (- 1.0 (cos radians))))
+           (let* ((x (aref a 0))
+                  (y (aref a 1))
+                  (z (aref a 2))
+                  (gxx (* g x x)) (gxy (* g x y)) (gxz (* g x z))
+                  (gyy (* g y y)) (gyz (* g y z)) (gzz (* g z z)))
+             (matrix
+              (+ gxx c)        (- gxy (* s z))  (+ gxz (* s y)) 0.0
+              (+ gxy (* s z))  (+ gyy c)        (- gyz (* s x)) 0.0
+              (- gxz (* s y))  (+ gyz (* s x))  (+ gzz c)       0.0
+              0.0              0.0              0.0             1.0))))))
 
 (declaim (ftype (sfunction (vec vec) matrix) reorient))
 (defun reorient (a b)
@@ -249,22 +264,23 @@ element of A is ignored."
       (let ((inverse (zero-matrix)))
         ;; Inverse of the upper left 3x3
         (let ((det (submatrix-determinant matrix)))
-          (macrolet ((inv ((i j) (ai aj bi bj) (ci cj di dj))
-                       `(setf (mref inverse ,(1- i) ,(1- j))
-                              (/ (- (* (mref matrix ,(1- ai) ,(1- aj))
-                                       (mref matrix ,(1- bi) ,(1- bj)))
-                                    (* (mref matrix ,(1- ci) ,(1- cj))
-                                       (mref matrix ,(1- di) ,(1- dj))))
-                                 det))))
-            (inv (1 1) (2 2 3 3) (2 3 3 2))
-            (inv (1 2) (1 3 3 2) (1 2 3 3))
-            (inv (1 3) (1 2 2 3) (1 3 2 2))
-            (inv (2 1) (2 3 3 1) (2 1 3 3))
-            (inv (2 2) (1 1 3 3) (1 3 3 1))
-            (inv (2 3) (1 3 2 1) (1 1 2 3))
-            (inv (3 1) (2 1 3 2) (2 2 3 1))
-            (inv (3 2) (1 2 3 1) (1 1 3 2))
-            (inv (3 3) (1 1 2 2) (1 2 2 1))))
+          (unless (zerop det)
+            (macrolet ((inv ((i j) (ai aj bi bj) (ci cj di dj))
+                        `(setf (mref inverse ,(1- i) ,(1- j))
+                               (/ (- (* (mref matrix ,(1- ai) ,(1- aj))
+                                        (mref matrix ,(1- bi) ,(1- bj)))
+                                     (* (mref matrix ,(1- ci) ,(1- cj))
+                                        (mref matrix ,(1- di) ,(1- dj))))
+                                  det))))
+             (inv (1 1) (2 2 3 3) (2 3 3 2))
+             (inv (1 2) (1 3 3 2) (1 2 3 3))
+             (inv (1 3) (1 2 2 3) (1 3 2 2))
+             (inv (2 1) (2 3 3 1) (2 1 3 3))
+             (inv (2 2) (1 1 3 3) (1 3 3 1))
+             (inv (2 3) (1 3 2 1) (1 1 2 3))
+             (inv (3 1) (2 1 3 2) (2 2 3 1))
+             (inv (3 2) (1 2 3 1) (1 1 3 2))
+             (inv (3 3) (1 1 2 2) (1 2 2 1)))))
         ;; translation: negation after dotting with upper rows
         (let ((x (mref matrix 0 3))
               (y (mref matrix 1 3))
