@@ -109,46 +109,6 @@ major order.)"
 
 ;;;; MATRIX MULTIPLICATION
 
-(declaim (ftype (sfunction (vec matrix) vec) transform-point)
-         (inline transform-point))
-(defun transform-point (vec matrix)
-  "Apply transformation MATRIX to VEC, return result as a
-freshly allocated VEC."
-  (%transform-point (alloc-vec) vec matrix))
-
-(declaim (ftype (sfunction (vec matrix) vec) transform-direction)
-         (inline transform-direction))
-(defun transform-direction (vec matrix)
-  "Apply transformation MATRIX to VEC ignoring the translation component,
-return result as a freshly allocated VEC."
-  (%transform-direction (alloc-vec) vec matrix))
-
-(declaim (ftype (function (vec vec matrix) (values vec vec &optional))
-                transform-bounds))
-(defun transform-bounds (a b matrix)
-  "Transform the axis-aligned bounding box specified by its extreme corners A
-and B using MATRIX. Return new extreme corners (minimum and maximum
-coordinates) as freshly allocted VECs, as the primary and secondary value."
-  ;; Naive method: transform all corners.
-  ;; See http://www.ics.uci.edu/~arvo/code/TransformingBoxes.c
-  ;; for a better way.
-  (let* ((min (transform-point a matrix))
-         (max (copy-vec min)))
-    (flet ((tran (i j k)
-             (let ((tmp (vec i j k)))
-               (declare (dynamic-extent tmp))
-               (%transform-point tmp tmp matrix)
-               (%vec-min min min tmp)
-               (%vec-max max max tmp))))
-      (tran (aref a 0) (aref a 1) (aref b 2))
-      (tran (aref a 0) (aref b 1) (aref a 2))
-      (tran (aref a 0) (aref b 1) (aref b 2))
-      (tran (aref b 0) (aref a 1) (aref a 2))
-      (tran (aref b 0) (aref a 1) (aref b 2))
-      (tran (aref b 0) (aref b 1) (aref a 2))
-      (tran (aref b 0) (aref b 1) (aref b 2)))
-    (values min max)))
-
 (declaim (ftype (sfunction (&rest matrix) matrix) matrix*))
 (defun matrix* (&rest matrices)
   "Multiply MATRICES, return result as a freshly allocated MATRIX."

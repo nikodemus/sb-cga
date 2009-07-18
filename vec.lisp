@@ -18,6 +18,18 @@
 
 (in-package :sb-cga)
 
+(defmacro define-opt-fun (name lambda-list doc)
+  (let ((destructive-name (symbolicate "%%" name))
+        (vm-name (symbolicate "%" name))
+        (form (gensym "FORM")))
+    `(progn
+       (note-optimizable-fun ',name ',destructive-name)
+       (declaim (inline ,name))
+       (defun ,name ,lambda-list ,doc (,vm-name (alloc-vec) ,@lambda-list))
+       (define-compiler-macro ,name (&whole ,form ,@lambda-list)
+         (declare (ignore ,@lambda-list))
+         (optimize-vec-allocation ,form)))))
+
 ;;;; CONSTRUCTORS
 
 (declaim (ftype (sfunction () vec) alloc-vec)
@@ -34,38 +46,33 @@
 
 ;;;; COPYING
 
-(declaim (ftype (sfunction (vec) vec) copy-vec)
-         (inline copy-vec))
-(defun copy-vec (vec)
-  "Allocate a fresh copy of VEC."
-  (%copy-vec (alloc-vec) vec))
+(declaim (inline %%copy-vec))
+(defun %%copy-vec (vec)
+  ;; Not really a copy, but allows optimizing copies away.
+  vec)
+
+(declaim (ftype (sfunction (vec) vec) copy-vec))
+(define-opt-fun copy-vec (vec)
+  "Allocate a fresh copy of VEC.")
 
 ;;;; ARITHMETIC
 
-(declaim (ftype (sfunction (vec vec) vec) vec+)
-         (inline vec+))
-(defun vec+ (a b)
-  "Add VEC A and VEC B, return result as a freshly allocated VEC."
-  (%vec+ (alloc-vec) a b))
+(declaim (ftype (sfunction (vec vec) vec) vec+))
+(define-opt-fun vec+ (a b)
+  "Add VEC A and VEC B, return result as a freshly allocated VEC.")
 
-(declaim (ftype (sfunction (vec vec) vec) vec-)
-         (inline vec-))
-(defun vec- (a b)
-  "Substract VEC B from VEC A, return result as a freshly allocated VEC."
-  (%vec- (alloc-vec) a b))
+(declaim (ftype (sfunction (vec vec) vec) vec-))
+(define-opt-fun vec- (a b)
+  "Substract VEC B from VEC A, return result as a freshly allocated VEC.")
 
-(declaim (ftype (sfunction (vec single-float)) vec*)
-         (inline vec*))
-(defun vec* (a f)
+(declaim (ftype (sfunction (vec single-float)) vec*))
+(define-opt-fun vec* (a f)
   "Multiply VEC A with single-float F, return result as a freshly allocated
-VEC."
-  (%vec* (alloc-vec) a f))
+VEC.")
 
-(declaim (ftype (sfunction (vec single-float) vec) vec/)
-         (inline vec/))
-(defun vec/ (a f)
-  "Divide VEC A by single-float F, return result as a freshly allocated VEC."
-  (%vec/ (alloc-vec) a f))
+(declaim (ftype (sfunction (vec single-float) vec) vec/))
+(define-opt-fun vec/ (a f)
+  "Divide VEC A by single-float F, return result as a freshly allocated VEC.")
 
 ;;; FIXME: Unless this is inline SBCL doesn't seem to trust
 ;;; the declared type!
@@ -73,32 +80,54 @@ VEC."
          (inline dot-product))
 (defun dot-product (a b)
   "Compute dot product VEC A and VEC B."
-  (sb-cga-vm:%dot-product a b))
+  (%dot-product a b))
 
-(declaim (ftype (sfunction (vec vec) vec) hadamard-product)
-         (inline hadamard-product))
-(defun hadamard-product (a b)
+(declaim (ftype (sfunction (vec vec) vec) hadamard-product))
+(define-opt-fun hadamard-product (a b)
   "Compute hadamard product (elementwise product) of VEC A and VEC B,
-return result as a freshly allocated VEC."
-  (%hadamard-product (alloc-vec) a b))
+return result as a freshly allocated VEC.")
 
 (declaim (ftype (sfunction (vec) single-float) vec-length))
 (defun vec-length (a)
   "Length of VEC A."
-  (sb-cga-vm:%vec-length a))
+  (%vec-length a))
 
-(declaim (ftype (sfunction (vec) vec))
-         (inline normalize))
-(defun normalize (a)
-  "Normalize VEC A, return result as a freshly allocated VEC."
-  (%normalize (alloc-vec) a))
+(declaim (ftype (sfunction (vec) vec)))
+(define-opt-fun normalize (a)
+  "Normalize VEC A, return result as a freshly allocated VEC.")
 
-(declaim (ftype (sfunction (vec vec single-float) vec) vec-lerp)
-         (inline vec-lerp))
-(defun vec-lerp (a b f)
+(declaim (ftype (sfunction (vec vec single-float) vec) vec-lerp))
+(define-opt-fun vec-lerp (a b f)
   "Linear interpolate VEC A and VEC B using single-float F as the
-interpolation factor, return result as a freshly allocated VEC."
-  (%vec-lerp (alloc-vec) a b f))
+interpolation factor, return result as a freshly allocated VEC.")
+
+;;; FIXME: It's a bit ugly that %VEC-MIN and %VEC-MAX have a fixed
+;;; arity, whereas VEC-MIN and VEC-MAX have variable arity. Generalize
+;;; and write a compiler-macro.
+;;;
+;;; Similarly it would be nice for most VEC operations to have
+;;; a variable arity, but it has to be made efficient...
+(declaim (ftype (sfunction (vec vec vec) vec) %vec-min)
+         (inline %vec-min))
+(defun %vec-min (result a b)
+  "Elementwise minimum of VEC A and VEC B, store result in VEC RESULT."
+  (macrolet ((dim (n)
+               `(setf (aref result ,n) (min (aref a ,n) (aref b ,n)))))
+    (dim 0)
+    (dim 1)
+    (dim 2))
+  result)
+
+(declaim (ftype (sfunction (vec vec vec) vec) %vec-max)
+         (inline %vec-max))
+(defun %vec-max (result a b)
+  "Elementwise maximum of VEC A and VEC B, store result in VEC RESULT."
+  (macrolet ((dim (n)
+               `(setf (aref result ,n) (max (aref a ,n) (aref b ,n)))))
+    (dim 0)
+    (dim 1)
+    (dim 2))
+  result)
 
 (declaim (ftype (sfunction (vec &rest vec) vec) vec-min))
 (defun vec-min (vec &rest vecs)
@@ -140,7 +169,7 @@ allocated VEC."
 (declaim (ftype (sfunction (vec vec) boolean) vec=))
 (defun vec= (a b)
   "Return true if VEC A and VEC B are elementwise identical."
-  (sb-cga-vm:%vec= a b))
+  (%vec= a b))
 
 (declaim (ftype (sfunction (vec vec &optional single-float) boolean) vec~))
 (defun vec~ (a b &optional (epsilon +default-epsilon+))
@@ -155,10 +184,45 @@ EPSILON defaults to +DEFAULT-EPSILON+."
 
 ;;;; ADJUSTING A VECTOR
 
-(declaim (ftype (sfunction (vec vec single-float) vec) adjust-vec)
-         (inline adjust-vec))
-(defun adjust-vec (point direction distance)
+(declaim (ftype (sfunction (vec vec single-float) vec) adjust-vec))
+(define-opt-fun adjust-vec (point direction distance)
   "Multiply VEC DIRECTION by single-float DISTANCE adding the result to VEC POINT.
-Return result as a freshly allocated VEC."
-  (%adjust-vec (alloc-vec) point direction distance))
+Return result as a freshly allocated VEC.")
 
+;;;; TRANSFORMATIONS
+
+(declaim (ftype (sfunction (vec matrix) vec) transform-point))
+(define-opt-fun transform-point (vec matrix)
+  "Apply transformation MATRIX to VEC, return result as a
+freshly allocated VEC.")
+
+(declaim (ftype (sfunction (vec matrix) vec) transform-direction))
+(define-opt-fun transform-direction (vec matrix)
+  "Apply transformation MATRIX to VEC ignoring the translation component,
+return result as a freshly allocated VEC.")
+
+(declaim (ftype (function (vec vec matrix) (values vec vec &optional))
+                transform-bounds))
+(defun transform-bounds (a b matrix)
+  "Transform the axis-aligned bounding box specified by its extreme corners A
+and B using MATRIX. Return new extreme corners (minimum and maximum
+coordinates) as freshly allocted VECs, as the primary and secondary value."
+  ;; Naive method: transform all corners.
+  ;; See http://www.ics.uci.edu/~arvo/code/TransformingBoxes.c
+  ;; for a better way.
+  (let* ((min (transform-point a matrix))
+         (max (copy-vec min)))
+    (flet ((tran (i j k)
+             (let ((tmp (vec i j k)))
+               (declare (dynamic-extent tmp))
+               (%%transform-point tmp matrix)
+               (%vec-min min min tmp)
+               (%vec-max max max tmp))))
+      (tran (aref a 0) (aref a 1) (aref b 2))
+      (tran (aref a 0) (aref b 1) (aref a 2))
+      (tran (aref a 0) (aref b 1) (aref b 2))
+      (tran (aref b 0) (aref a 1) (aref a 2))
+      (tran (aref b 0) (aref a 1) (aref b 2))
+      (tran (aref b 0) (aref b 1) (aref a 2))
+      (tran (aref b 0) (aref b 1) (aref b 2)))
+    (values min max)))

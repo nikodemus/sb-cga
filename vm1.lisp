@@ -16,7 +16,14 @@
 ;;;; TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ;;;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-(in-package :sb-cga-vm)
+(in-package :sb-cga)
+
+;;;; KLUDGE: SBCL doesn't currently have SSE2 feature, but it's cleaner to
+;;;; conditionalize on a single feature (relevant once x86 gets SSE2
+;;;; instructions.)
+#+x86-64
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (pushnew :sb-cga-sse2 *features*))
 
 #+sb-cga-sse2
 (progn
@@ -73,8 +80,7 @@
 
 ;;;; VECTOR COPYING
 
-(defknown %copy-vec (vec vec) vec
-    (any #+sb-cga-sse2 always-translatable)
+(defknown %copy-vec (vec vec) vec (any)
   :result-arg 0)
 
 #+sb-cga-sse2
@@ -94,8 +100,7 @@
 
 ;;;; VECTOR ADDITION
 
-(defknown %vec+ (vec vec vec) vec
-    (any #+sb-cga-sse2 always-translatable)
+(defknown %vec+ (vec vec vec) vec (any)
   :result-arg 0)
 
 #+sb-cga-sse2
@@ -116,10 +121,29 @@
     (store-slice tmp result-vector)
     (move result result-vector)))
 
+(defknown %%vec+ (vec vec) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%%vec+)
+  (:translate %%vec+)
+  (:policy :fast-safe)
+  (:args (vector1 :scs (descriptor-reg) :target result)
+         (vector2 :scs (descriptor-reg)))
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) tmp)
+  (:generator 10
+    ;; Load vector into TMP
+    (load-slice tmp vector1)
+    ;; Add
+    (inst addps tmp (ea-for-slice vector2))
+    (store-slice tmp vector1)
+    (move result vector1)))
+
 ;;;; VECTOR SUBSTRACTION
 
-(defknown %vec- (vec vec vec) vec
-    (any #+sb-cga-sse2 always-translatable)
+(defknown %vec- (vec vec vec) vec (any)
   :result-arg 0)
 
 #+sb-cga-sse2
@@ -140,10 +164,29 @@
     (store-slice tmp result-vector)
     (move result result-vector)))
 
+(defknown %%vec- (vec vec) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%%vec-)
+  (:translate %%vec-)
+  (:policy :fast-safe)
+  (:args (vector1 :scs (descriptor-reg) :target result)
+         (vector2 :scs (descriptor-reg)))
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) tmp)
+  (:generator 10
+    ;; Load vector into TMP
+    (load-slice tmp vector1)
+    ;; Sub
+    (inst subps tmp (ea-for-slice vector2))
+    (store-slice tmp vector1)
+    (move result vector1)))
+
 ;;;; VECTOR/SCALAR MULTIPLICATION
 
-(defknown %vec* (vec vec single-float) vec
-    (any #+sb-cga-sse2 always-translatable)
+(defknown %vec* (vec vec single-float) vec (any)
   :result-arg 0)
 
 #+sb-cga-sse2
@@ -167,10 +210,32 @@
     (store-slice tmp result-vector)
     (move result result-vector)))
 
+(defknown %%vec* (vec single-float) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%%vec*)
+  (:translate %%vec*)
+  (:policy :fast-safe)
+  (:args (vector :scs (descriptor-reg) :target result)
+         (float :scs (single-reg)))
+  (:arg-types * single-float)
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) tmp)
+  (:generator 10
+    ;; Fill XMM reg with the float.
+    (inst movss tmp float)
+    (inst unpcklps tmp tmp)
+    (inst unpcklps tmp tmp)
+    ;; Multiply
+    (inst mulps tmp (ea-for-slice vector))
+    (store-slice tmp vector)
+    (move result vector)))
+
 ;;;; VECTOR/SCALAR DIVISION
 
-(defknown %vec/ (vec vec single-float) vec
-    (any #+sb-cga-sse2 always-translatable)
+(defknown %vec/ (vec vec single-float) vec (any)
   :result-arg 0)
 
 #+sb-cga-sse2
@@ -196,6 +261,31 @@
     ;; Save result to source vector
     (store-slice tmp result-vector)
     (move result result-vector)))
+
+(defknown %%vec/ (vec single-float) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%%vec/)
+  (:translate %%vec/)
+  (:policy :fast-safe)
+  (:args (vector :scs (descriptor-reg) :target result)
+         (float :scs (single-reg)))
+  (:arg-types * single-float)
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) tmp)
+  (:temporary (:sc single-reg) floats)
+  (:generator 10
+    ;; Fill XMM reg with the float.
+    (inst movss floats float)
+    (inst unpcklps floats floats)
+    (inst unpcklps floats floats)
+    ;; Divide
+    (load-slice tmp vector)
+    (inst divps tmp floats)
+    (store-slice tmp vector)
+    (move result vector)))
 
 ;;;; DOT PRODUCT
 
@@ -229,19 +319,9 @@
     (inst addss result tmp2)
     (inst addss result tmp3)))
 
-#-sb-cga-sse2
-(progn
-  (declaim (inline %dot-product))
-  (defun %dot-product (a b)
-    (declare (optimize (speed 3) (safety 1) (debug 1)))
-    (macrolet ((dim (n)
-                 `(* (aref a ,n) (aref b ,n))))
-      (+ (dim 0) (dim 1) (dim 2)))))
-
 ;;;; HADAMARD PRODUCT
 
-(defknown %hadamard-product (vec vec vec) vec
-    (any #+sb-cga-sse2 always-translatable)
+(defknown %hadamard-product (vec vec vec) vec (any)
   :result-arg 0)
 
 #+sb-cga-sse2
@@ -261,6 +341,26 @@
     ;; Result
     (store-slice tmp result-vector)
     (move result result-vector)))
+
+(defknown %%hadamard-product (vec vec) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%%hadamard-product)
+  (:translate %%hadamard-product)
+  (:policy :fast-safe)
+  (:args (vector1 :scs (descriptor-reg) :target result)
+         (vector2 :scs (descriptor-reg)))
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) tmp)
+  (:generator 10
+    ;; Load vector into TMP
+    (load-slice tmp vector2)
+    ;; Multiply elementwise
+    (inst mulps tmp (ea-for-slice vector1))
+    (store-slice tmp vector1)
+    (move result vector1)))
 
 ;;; VECTOR LENGTH
 
@@ -288,20 +388,9 @@
     (inst addss result tmp2)
     (inst sqrtss result result)))
 
-#-sb-cga-sse2
-(progn
-  (declaim (inline %vec-length))
-  (defun %vec-length (a)
-    (declare (optimize (speed 3) (safety 1) (debug 1)))
-    (macrolet ((dim (n)
-                 `(let ((d (aref a ,n)))
-                     (* d d))))
-      (sqrt (+ (dim 0) (dim 1) (dim 2))))))
-
 ;;;; NORMALIZATION
 
-(defknown %normalize (vec vec) vec
-    (any #+sb-cga-sse2 always-translatable)
+(defknown %normalize (vec vec) vec (any)
   :result-arg 0)
 
 #+sb-cga-sse2
@@ -343,10 +432,51 @@
     (inst movss (ea-for-data result-vector 2) tmp6)
     (move result result-vector)))
 
+(defknown %%normalize (vec) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%%normalize)
+  (:translate %%normalize)
+  (:policy :fast-safe)
+  (:args (vector :scs (descriptor-reg) :target result))
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) tmp1)
+  (:temporary (:sc single-reg) tmp2)
+  (:temporary (:sc single-reg) tmp3)
+  (:temporary (:sc single-reg) tmp4)
+  (:temporary (:sc single-reg) tmp5)
+  (:temporary (:sc single-reg) tmp6)
+  (:generator 10
+    ;; Load, keep two copies
+    (inst movss tmp1 (ea-for-data vector 0))
+    (inst movss tmp2 (ea-for-data vector 1))
+    (inst movss tmp3 (ea-for-data vector 2))
+    (inst movss tmp4 tmp1)
+    (inst movss tmp5 tmp2)
+    (inst movss tmp6 tmp3)
+    ;; Compute the length into tmp1
+    (inst mulss tmp1 tmp1)
+    (inst mulss tmp2 tmp2)
+    (inst mulss tmp3 tmp3)
+    (inst addss tmp1 tmp2)
+    (inst addss tmp1 tmp3)
+    (inst sqrtss tmp1 tmp1)
+    ;; Divide original -- is this faster then loading again and
+    ;; using DIVPS?
+    (inst divss tmp4 tmp1)
+    (inst divss tmp5 tmp1)
+    (inst divss tmp6 tmp1)
+    ;; Store result
+    (inst movss (ea-for-data vector 0) tmp4)
+    (inst movss (ea-for-data vector 1) tmp5)
+    (inst movss (ea-for-data vector 2) tmp6)
+    (move result vector)))
+
 ;;;; LINEAR INTERPOLATION
 
-(defknown %vec-lerp (vec vec vec single-float) vec
-    (any #+sb-cga-sse2 always-translatable)
+(defknown %vec-lerp (vec vec vec single-float) vec (any)
   :result-arg 0)
 
 #+sb-cga-sse2
@@ -380,10 +510,43 @@
     (store-slice floats result-vector)
     (move result result-vector)))
 
-;;;; TRANSFORMING A VECTOR
+(defknown %%vec-lerp (vec vec single-float) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
 
-(defknown %transform-point (vec vec matrix) vec
-    (any)
+#+sb-cga-sse2
+(define-vop (%%vec-lerp)
+  (:translate %%vec-lerp)
+  (:policy :fast-safe)
+  (:args (vector1 :scs (descriptor-reg) :target result)
+         (vector2 :scs (descriptor-reg))
+         (float :scs (single-reg)))
+  (:arg-types * * single-float)
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) floats)
+  (:temporary (:sc single-reg) 1-floats)
+  (:generator 10
+    ;; Fill XMM reg with the float.
+    (inst movss floats float)
+    (inst unpcklps floats floats)
+    (inst unpcklps floats floats)
+    ;; Same for the 1.0-float
+    (inst movss 1-floats (register-inline-constant 1.0))
+    (inst subss 1-floats float)
+    (inst unpcklps 1-floats 1-floats)
+    (inst unpcklps 1-floats 1-floats)
+    ;; Multiply VECTOR1 by 1-FLOATS, and VECTOR2 by FLOATS
+    (inst mulps 1-floats (ea-for-slice vector1))
+    (inst mulps floats (ea-for-slice vector2))
+    ;; Add
+    (inst addps floats 1-floats)
+    ;; Save result and return
+    (store-slice floats vector1)
+    (move result vector1)))
+
+;;;; TRANSFORMING A POINT
+
+(defknown %transform-point (vec vec matrix) vec (any)
   :result-arg 0)
 
 #+sb-cga-sse2
@@ -423,8 +586,49 @@
     (store-slice col1 result-vector)
     (move result result-vector)))
 
-(defknown %transform-direction (vec vec matrix) vec
-    (any)
+(defknown %%transform-point (vec matrix) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%%transform-point)
+  (:translate %%transform-point)
+  (:policy :fast-safe)
+  (:args (vector :scs (descriptor-reg) :target result)
+         (matrix :scs (descriptor-reg)))
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) vec)
+  (:temporary (:sc single-reg) col1)
+  (:temporary (:sc single-reg) col2)
+  (:temporary (:sc single-reg) col3)
+  (:generator 10
+    (load-slice vec vector)
+    ;; Distribute vec[2] and multiply
+    (inst movaps col3 vec)
+    (inst unpckhps col3 col3)
+    (inst unpcklps col3 col3)
+    (inst mulps col3 (ea-for-slice matrix 2))
+    ;; Distribute vec[1] and multiply
+    (inst movaps col2 vec)
+    (inst unpcklps col2 col2)
+    (inst unpckhps col2 col2)
+    (inst mulps col2 (ea-for-slice matrix 1))
+    ;; Distribute vec[0] and multiply
+    (inst movaps col1 vec)
+    (inst unpcklps col1 col1)
+    (inst unpcklps col1 col1)
+    (inst mulps col1 (ea-for-slice matrix 0))
+    ;; Add rows -- including the translation column.
+    (inst addps col1 (ea-for-slice matrix 3))
+    (inst addps col3 col2)
+    (inst addps col1 col3)
+    ;; Store result
+    (store-slice col1 vector)
+    (move result vector)))
+
+;;;; TRANSFORMING A DIRECTION
+
+(defknown %transform-direction (vec vec matrix) vec (any)
   :result-arg 0)
 
 #+sb-cga-sse2
@@ -464,10 +668,49 @@
     (store-slice col1 result-vector)
     (move result result-vector)))
 
+(defknown %%transform-direction (vec matrix) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%%transform-direction)
+  (:translate %%transform-direction)
+  (:policy :fast-safe)
+  (:args (vector :scs (descriptor-reg) :target result)
+         (matrix :scs (descriptor-reg)))
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) vec)
+  (:temporary (:sc single-reg) col1)
+  (:temporary (:sc single-reg) col2)
+  (:temporary (:sc single-reg) col3)
+  (:generator 10
+    ;; Load stuff
+    (load-slice vec vector)
+    ;; Distribute vec[2] and multiply
+    (inst movaps col3 vec)
+    (inst unpckhps col3 col3)
+    (inst unpcklps col3 col3)
+    (inst mulps col3 (ea-for-slice matrix 2))
+    ;; Distribute vec[1] and multiply
+    (inst movaps col2 vec)
+    (inst unpcklps col2 col2)
+    (inst unpckhps col2 col2)
+    (inst mulps col2 (ea-for-slice matrix 1))
+    ;; Distribute vec[0] and multiply
+    (inst movaps col1 vec)
+    (inst unpcklps col1 col1)
+    (inst unpcklps col1 col1)
+    (inst mulps col1 (ea-for-slice matrix 0))
+    ;; Add rows -- except for translation.
+    (inst addps col1 col2)
+    (inst addps col1 col3)
+    ;; Store result
+    (store-slice col1 vector)
+    (move result vector)))
+
 ;;;; ADJUSTING A VECTOR
 
-(defknown %adjust-vec (vec vec vec single-float) vec
-    (any)
+(defknown %adjust-vec (vec vec vec single-float) vec (any)
   :result-arg 0)
 
 #+sb-cga-sse2
@@ -493,3 +736,29 @@
     ;; Result
     (store-slice tmp result-vector)
     (move result result-vector)))
+
+(defknown %%adjust-vec (vec vec single-float) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%%adjust-vec)
+  (:translate %%adjust-vec)
+  (:policy :fast-safe)
+  (:args (point :scs (descriptor-reg) :target result)
+         (direction :scs (descriptor-reg))
+         (distance :scs (single-reg)))
+  (:arg-types * * single-float)
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) tmp)
+  (:generator 10
+    ;; Fill TMP with DISTANCE
+    (inst movss tmp distance)
+    (inst unpcklps tmp tmp)
+    (inst unpcklps tmp tmp)
+    ;; Multiply by DIRECTION
+    (inst mulps tmp (ea-for-slice direction))
+    ;; Add POINT
+    (inst addps tmp (ea-for-slice point))
+    (store-slice tmp point)
+    (move result point)))

@@ -16,18 +16,28 @@
 ;;;; TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ;;;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-(in-package :sb-cga-vm)
+(in-package :sb-cga)
+
+(defmacro define-vm-fun (name lambda-list &body generic-body)
+  (multiple-value-bind (forms declarations doc)
+      (sb-int:parse-body generic-body :doc-string-allowed t)
+    (declare (ignorable forms))
+    `(progn
+       #-sb-cga-sse2
+       (declaim (inline ,name))
+       (defun ,name ,lambda-list
+         ,@(when doc (list doc))
+         ,@declarations
+         (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
+         #+sb-cga-sse2
+         (,name ,@lambda-list)
+         #-sb-cga-sse2
+         (progn ,@forms)))))
 
 ;;;; VECTOR COPYING
 
-#-sb-cga-sse2
-(declaim (inline %copy-vec))
-(defun %copy-vec (result vec)
+(define-vm-fun %copy-vec (result vec)
   "Copy contents of VEC into RESULT, return RESULT. Unsafe."
-  (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
-  #+sb-cga-sse2
-  (%copy-vec result vec)
-  #-sb-cga-sse2
   (macrolet ((dim (n)
                `(setf (aref result ,n) (aref vec ,n))))
     (dim 0)
@@ -37,14 +47,8 @@
 
 ;;;; VECTOR ADDITION
 
-#-sb-cga-sse2
-(declaim (inline %vec+))
-(defun %vec+ (result a b)
+(define-vm-fun %vec+ (result a b)
   "Add VEC A and B, store result in VEC RESULT. Return RESULT. Unsafe"
-  (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
-  #+sb-cga-sse2
-  (%vec+ result a b)
-  #-sb-cga-sse2
   (macrolet ((dim (n)
                `(setf (aref result ,n) (+ (aref a ,n) (aref b ,n)))))
     (dim 0)
@@ -52,17 +56,14 @@
     (dim 2)
     result))
 
+(define-vm-fun %%vec+ (a b)
+  (%vec+ a a b))
+
 ;;;; VECTOR SUBSTRACTION
 
-#-sb-cga-sse2
-(declaim (inline %vec-))
-(defun %vec- (result a b)
+(define-vm-fun %vec- (result a b)
   "Substract VEC B from VEC A, store result in VEC RESULT. Return RESULT.
 Unsafe."
-  (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
-  #+sb-cga-sse2
-  (%vec- result a b)
-  #-sb-cga-sse2
   (macrolet ((dim (n)
                `(setf (aref result ,n) (- (aref a ,n) (aref b ,n)))))
     (dim 0)
@@ -70,17 +71,14 @@ Unsafe."
     (dim 2)
     result))
 
+(define-vm-fun %%vec- (a b)
+  (%vec- a a b))
+
 ;;;; VECTOR/SCALAR MULTIPLICATION
 
-#-sb-cga-sse2
-(declaim (inline %vec*))
-(defun %vec* (result a f)
+(define-vm-fun %vec* (result a f)
   "Multiply VEC A with single-float F, store result in VEC RESULT. Return
 RESULT. Unsafe."
-  (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
-  #+sb-cga-sse2
-  (%vec* result a f)
-  #-sb-cga-sse2
   (macrolet ((dim (n)
                `(setf (aref result ,n) (* (aref a ,n) f))))
     (dim 0)
@@ -88,17 +86,14 @@ RESULT. Unsafe."
     (dim 2)
     result))
 
+(define-vm-fun %%vec* (a f)
+  (%vec* a a f))
+
 ;;;; VECTOR/SCALAR DIVISION
 
-#-sb-cga-sse2
-(declaim (inline %vec/))
-(defun %vec/ (result a f)
+(define-vm-fun %vec/ (result a f)
   "Divide VEC A by single-float F, store result in VEC RESULT. Return RESULT.
 Unsafe."
-  (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
-  #+sb-cga-sse2
-  (%vec/ result a f)
-  #-sb-cga-sse2
   (macrolet ((dim (n)
                `(setf (aref result ,n) (/ (aref a ,n) f))))
     (dim 0)
@@ -106,17 +101,21 @@ Unsafe."
     (dim 2)
     result))
 
+(define-vm-fun %%vec/ (a f)
+  (%vec/ a a f))
+
+;;;; DOT PRODUCT
+
+(define-vm-fun %dot-product (a b)
+  (macrolet ((dim (n)
+               `(* (aref a ,n) (aref b ,n))))
+    (+ (dim 0) (dim 1) (dim 2))))
+
 ;;;; HADAMARD PRODUCT
 
-#-sb-cga-sse2
-(declaim (inline %hadamard-product))
-(defun %hadamard-product (result a b)
+(define-vm-fun %hadamard-product (result a b)
   "Compute hadamard product (elementwise product) of VEC A and VEC B, store
 result in VEC RESULT. Return RESULT. Unsafe."
-  (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
-  #+sb-cga-sse2
-  (%hadamard-product result a b)
-  #-sb-cga-sse2
   (macrolet ((dim (n)
                `(setf (aref result ,n) (* (aref a ,n) (aref b ,n)))))
     (dim 0)
@@ -124,16 +123,21 @@ result in VEC RESULT. Return RESULT. Unsafe."
     (dim 2)
     result))
 
+(define-vm-fun %%hadamard-product (a b)
+  (%hadamard-product a a b))
+
+;;;; LENGTH
+
+(define-vm-fun %vec-length (a)
+  (macrolet ((dim (n)
+               `(let ((d (aref a ,n)))
+                  (* d d))))
+    (sqrt (+ (dim 0) (dim 1) (dim 2)))))
+
 ;;;; NORMALIZATION
 
-#-sb-cga-sse2
-(declaim (inline %normalize))
-(defun %normalize (result a)
+(define-vm-fun %normalize (result a)
   "Normalize VEC A, store result into VEC RESULT. Return RESULT. Unsafe."
-  (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
-  #+sb-cga-sse2
-  (%normalize result a)
-  #-sb-cga-sse2
   (let* ((va (aref a 0))
          (vb (aref a 1))
          (vc (aref a 2))
@@ -143,17 +147,14 @@ result in VEC RESULT. Return RESULT. Unsafe."
           (aref result 2) (/ vc len))
     result))
 
+(define-vm-fun %%normalize (a)
+  (%normalize a a))
+
 ;;;; LINEAR INTERPOLATION
 
-#-sb-cga-sse2
-(declaim (inline %vec-lerp))
-(defun %vec-lerp (result a b f)
+(define-vm-fun %vec-lerp (result a b f)
   "Linear interpolate VEC A and VEC B using single-float F as the
 interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
-  (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
-  #+sb-cga-sse2
-  (%vec-lerp result a b f)
-  #-sb-cga-sse2
   (let ((f2 (- 1.0 f)))
     (macrolet ((dim (n)
                  `(setf (aref result ,n) (+ (* f2 (aref a ,n)) (* f (aref b ,n))))))
@@ -162,40 +163,13 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
       (dim 2))
     result))
 
-;;;; ELEMENTWISE MINIMUM AND MAXIMUM
-
-(declaim (ftype (sfunction (vec vec vec) vec) %vec-min)
-         (inline %vec-min))
-(defun %vec-min (result a b)
-  "Elementwise minimum of VEC A and VEC B, store result in VEC RESULT."
-  (macrolet ((dim (n)
-               `(setf (aref result ,n) (min (aref a ,n) (aref b ,n)))))
-    (dim 0)
-    (dim 1)
-    (dim 2))
-  result)
-
-(declaim (ftype (sfunction (vec vec vec) vec) %vec-max)
-         (inline %vec-max))
-(defun %vec-max (result a b)
-  "Elementwise maximum of VEC A and VEC B, store result in VEC RESULT."
-  (macrolet ((dim (n)
-               `(setf (aref result ,n) (max (aref a ,n) (aref b ,n)))))
-    (dim 0)
-    (dim 1)
-    (dim 2))
-  result)
+(define-vm-fun %%vec-lerp (a b d)
+  (%vec-lerp a a b f))
 
 ;;;; TRANSFORMING A VECTOR -- either as a point or a direction
 
-#-sb-cga-sse2
-(declaim (inline %transform-point))
-(defun %transform-point (result vec matrix)
+(define-vm-fun %transform-point (result vec matrix)
   "Apply transformation MATRIX to VEC, store result in RESULT. Return RESULT. Unsafe."
-  (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
-  #+sb-cga-sse2
-  (%transform-point result vec matrix)
-  #-sb-cga-sse2
   (let ((a (aref vec 0))
         (b (aref vec 1))
         (c (aref vec 2)))
@@ -210,14 +184,11 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
       (dim 2)
       result)))
 
-#-sb-cga-sse2
-(declaim (inline %transform-direction))
-(defun %transform-direction (result vec matrix)
+(define-vm-fun %%transform-point (vec matrix)
+  (%transform-point vec vec matrix))
+
+(define-vm-fun %transform-direction (result vec matrix)
   "Apply transformation MATRIX to VEC, store result in RESULT. Return RESULT. Unsafe."
-  (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
-  #+sb-cga-sse2
-  (%transform-direction result vec matrix)
-  #-sb-cga-sse2
   (let ((a (aref vec 0))
         (b (aref vec 1))
         (c (aref vec 2)))
@@ -231,17 +202,14 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
       (dim 2)
       result)))
 
+(define-vm-fun %%transform-direction (vec matrix)
+  (%transform-direction vec vec matrix))
+
 ;;;; ADJUSTING A VECTOR
 
-#-sb-cga-sse2
-(declaim (inline %adjust-vec))
-(defun %adjust-vec (result point direction distance)
+(define-vm-fun %adjust-vec (result point direction distance)
   "Multiply VEC DIRECTION by single-float DISTANCE adding the result to VEC POINT.
 Store result in RESULT, and return it."
-  (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
-  #+sb-cga-sse2
-  (%adjust-vec result point direction distance)
-  #-sb-cga-sse2
   (macrolet ((dim (n)
                `(setf (aref result ,n)
                       (+ (aref point ,n) (* (aref direction ,n) distance)))))
@@ -249,3 +217,29 @@ Store result in RESULT, and return it."
     (dim 1)
     (dim 2)
     result))
+
+(define-vm-fun %%adjust-vec (point direction distance)
+  (%adjust-vec point point direction distance))
+
+;;;; Mapping from n-ary consing to non-consing versions where the first
+;;;; argument is both an operand an a place to store the result.
+
+(defvar *optimizable-funs* nil)
+
+(defun optimize-vec-allocation (form)
+  ;; rewrite (foo (bar ...) ...) into (%foo/1 (bar ...) ...)
+  (destructuring-bind (name arg &rest more) form
+    (if (and (consp arg) (assoc (car arg) *optimizable-funs* :test #'eq))
+          (let* ((destructive-name (cdr (assoc name *optimizable-funs* :test #'eq)))
+                 (opt `(,destructive-name ,arg ,@more)))
+            #+nil
+            (break "~S -> ~S" form opt)
+            opt)
+          form)))
+
+(defun note-optimizable-fun (name destructive-name)
+  (let ((cell (assoc name *optimizable-funs* :test #'eq)))
+    (if cell
+        (setf (cdr cell) destructive-name)
+        (push (cons name destructive-name) *optimizable-funs*))
+    name))

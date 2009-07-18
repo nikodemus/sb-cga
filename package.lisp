@@ -59,27 +59,10 @@
    #:vec~
    #:zero-matrix
    )
-  (:use :cl :sb-int)
-  (:lock t))
-
-;;;; KLUDGE: SBCL doesn't currently have SSE2 feature, but it's cleaner to
-;;;; conditionalize on a single feature (relevant once x86 gets SSE2
-;;;; instructions.)
-#+x86-64
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (pushnew :sb-cga-sse2 *features*))
-
-(defpackage :sb-cga-vm
-  (:export
-   #:%dot-product
-   #:%vec=
-   #:%vec-length)
-  (:use :cl :sb-c :sb-int :sb-cga)
-  (:implement :sb-cga)
-  (:lock t)
-  #+sb-cga-sse2
+  (:use :cl :sb-int :sb-c)
   (:import-from :sb-vm
                 #:inst
                 #:descriptor-reg
                 #:single-reg
-                ))
+                )
+  (:lock t))
