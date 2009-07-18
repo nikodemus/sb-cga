@@ -230,3 +230,22 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
       (dim 1)
       (dim 2)
       result)))
+
+;;;; ADJUSTING A VECTOR
+
+#-sb-cga-sse2
+(declaim (inline %adjust-vec))
+(defun %adjust-vec (result point direction distance)
+  "Multiply VEC DIRECTION by single-float DISTANCE adding the result to VEC POINT.
+Store result in RESULT, and return it."
+  (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
+  #+sb-cga-sse2
+  (%adjust-vec result point direction distance)
+  #-sb-cga-sse2
+  (macrolet ((dim (n)
+               `(setf (aref result ,n)
+                      (+ (aref point ,n) (* (aref direction ,n) distance)))))
+    (dim 0)
+    (dim 1)
+    (dim 2)
+    result))

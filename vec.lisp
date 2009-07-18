@@ -26,13 +26,11 @@
   "Allocate a zero-initialized VEC."
   (make-array 3 :element-type 'single-float))
 
-(declaim (ftype (sfunction (single-float single-float single-float) vec) vec))
+(declaim (ftype (sfunction (single-float single-float single-float) vec) vec)
+         (inline vec))
 (defun vec (a b c)
   "Allocate 3D vector [A, B, C]."
   (make-array 3 :element-type 'single-float :initial-contents (list a b c)))
-
-(define-compiler-macro vec (a b c)
-  `(make-array 3 :element-type 'single-float :initial-contents (list ,a ,b ,c)))
 
 ;;;; COPYING
 
@@ -64,7 +62,7 @@ VEC."
   (%vec* (alloc-vec) a f))
 
 (declaim (ftype (sfunction (vec single-float) vec) vec/)
-         (notinline vec/))
+         (inline vec/))
 (defun vec/ (a f)
   "Divide VEC A by single-float F, return result as a freshly allocated VEC."
   (%vec/ (alloc-vec) a f))
@@ -78,20 +76,19 @@ VEC."
   (sb-cga-vm:%dot-product a b))
 
 (declaim (ftype (sfunction (vec vec) vec) hadamard-product)
-         (notinline hadamard-product))
+         (inline hadamard-product))
 (defun hadamard-product (a b)
   "Compute hadamard product (elementwise product) of VEC A and VEC B,
 return result as a freshly allocated VEC."
   (%hadamard-product (alloc-vec) a b))
 
-(declaim (ftype (sfunction (vec) single-float) vec-length)
-         (notinline vec-length))
+(declaim (ftype (sfunction (vec) single-float) vec-length))
 (defun vec-length (a)
   "Length of VEC A."
   (sb-cga-vm:%vec-length a))
 
 (declaim (ftype (sfunction (vec) vec))
-         (notinline normalize))
+         (inline normalize))
 (defun normalize (a)
   "Normalize VEC A, return result as a freshly allocated VEC."
   (%normalize (alloc-vec) a))
@@ -103,8 +100,7 @@ return result as a freshly allocated VEC."
 interpolation factor, return result as a freshly allocated VEC."
   (%vec-lerp (alloc-vec) a b f))
 
-(declaim (ftype (sfunction (vec &rest vec) vec) vec-min)
-         (notinline vec-min))
+(declaim (ftype (sfunction (vec &rest vec) vec) vec-min))
 (defun vec-min (vec &rest vecs)
   "Elementwise minimum of VEC and VECS, return result as a freshly allocated
 VEC."
@@ -114,8 +110,7 @@ VEC."
       (%vec-min result result vec))
     result))
 
-(declaim (ftype (sfunction (vec &rest vec) vec) vec-max)
-         (notinline vec-max))
+(declaim (ftype (sfunction (vec &rest vec) vec) vec-max))
 (defun vec-max (vec &rest vecs)
   "Elementwise maximum of VEC and VECS, return result as a freshly allocated
 VEC."
@@ -142,8 +137,7 @@ allocated VEC."
 
 ;;;; COMPARISON
 
-(declaim (ftype (sfunction (vec vec) boolean) vec=)
-         (notinline vec=))
+(declaim (ftype (sfunction (vec vec) boolean) vec=))
 (defun vec= (a b)
   "Return true if VEC A and VEC B are elementwise identical."
   (sb-cga-vm:%vec= a b))
@@ -158,3 +152,13 @@ EPSILON defaults to +DEFAULT-EPSILON+."
     (macrolet ((dim (n)
                  `(<= -e (aref d ,n) epsilon)))
       (and (dim 0) (dim 1) (dim 2)))))
+
+;;;; ADJUSTING A VECTOR
+
+(declaim (ftype (sfunction (vec vec single-float) vec) adjust-vec)
+         (inline adjust-vec))
+(defun adjust-vec (point direction distance)
+  "Multiply VEC DIRECTION by single-float DISTANCE adding the result to VEC POINT.
+Return result as a freshly allocated VEC."
+  (%adjust-vec (alloc-vec) point direction distance))
+

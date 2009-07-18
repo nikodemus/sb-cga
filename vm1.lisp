@@ -156,16 +156,13 @@
   (:arg-types * * single-float)
   (:results (result :scs (descriptor-reg)))
   (:temporary (:sc single-reg) tmp)
-  (:temporary (:sc single-reg) floats)
   (:generator 10
-    ;; Load vector into TMP
-    (load-slice tmp vector)
     ;; Fill XMM reg with the float.
-    (inst movss floats float)
-    (inst unpcklps floats floats)
-    (inst unpcklps floats floats)
+    (inst movss tmp float)
+    (inst unpcklps tmp tmp)
+    (inst unpcklps tmp tmp)
     ;; Multiply
-    (inst mulps tmp floats)
+    (inst mulps tmp (ea-for-slice vector))
     ;; Save result to result vector
     (store-slice tmp result-vector)
     (move result result-vector)))
@@ -335,7 +332,8 @@
     (inst addss tmp1 tmp2)
     (inst addss tmp1 tmp3)
     (inst sqrtss tmp1 tmp1)
-    ;; Divide original
+    ;; Divide original -- is this faster then loading again and
+    ;; using DIVPS?
     (inst divss tmp4 tmp1)
     (inst divss tmp5 tmp1)
     (inst divss tmp6 tmp1)
@@ -361,30 +359,25 @@
          (float :scs (single-reg)))
   (:arg-types * * * single-float)
   (:results (result :scs (descriptor-reg)))
-  (:temporary (:sc single-reg) tmp)
-  (:temporary (:sc single-reg) tmp2)
   (:temporary (:sc single-reg) floats)
   (:temporary (:sc single-reg) 1-floats)
   (:generator 10
-    ;; Load vectors
-    (load-slice tmp vector1)
-    (load-slice tmp2 vector2)
     ;; Fill XMM reg with the float.
     (inst movss floats float)
     (inst unpcklps floats floats)
     (inst unpcklps floats floats)
-    ;; Same for the the 1- version
+    ;; Same for the 1.0-float
     (inst movss 1-floats (register-inline-constant 1.0))
     (inst subss 1-floats float)
     (inst unpcklps 1-floats 1-floats)
     (inst unpcklps 1-floats 1-floats)
     ;; Multiply VECTOR1 by 1-FLOATS, and VECTOR2 by FLOATS
-    (inst mulps tmp 1-floats)
-    (inst mulps tmp2 floats)
+    (inst mulps 1-floats (ea-for-slice vector1))
+    (inst mulps floats (ea-for-slice vector2))
     ;; Add
-    (inst addps tmp tmp2)
+    (inst addps floats 1-floats)
     ;; Save result and return
-    (store-slice tmp result-vector)
+    (store-slice floats result-vector)
     (move result result-vector)))
 
 ;;;; TRANSFORMING A VECTOR
@@ -469,4 +462,34 @@
     (inst addps col1 col3)
     ;; Store result
     (store-slice col1 result-vector)
+    (move result result-vector)))
+
+;;;; ADJUSTING A VECTOR
+
+(defknown %adjust-vec (vec vec vec single-float) vec
+    (any)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%adjust-vec)
+  (:translate %adjust-vec)
+  (:policy :fast-safe)
+  (:args (result-vector :scs (descriptor-reg) :target result)
+         (point :scs (descriptor-reg))
+         (direction :scs (descriptor-reg))
+         (distance :scs (single-reg)))
+  (:arg-types * * * single-float)
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) tmp)
+  (:generator 10
+    ;; Fill TMP with DISTANCE
+    (inst movss tmp distance)
+    (inst unpcklps tmp tmp)
+    (inst unpcklps tmp tmp)
+    ;; Multiply by DIRECTION
+    (inst mulps tmp (ea-for-slice direction))
+    ;; Add POINT
+    (inst addps tmp (ea-for-slice point))
+    ;; Result
+    (store-slice tmp result-vector)
     (move result result-vector)))

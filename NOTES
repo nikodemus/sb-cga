@@ -8,8 +8,17 @@
 *** DONE Defsystem
 *** DONE Defpackage
 *** TODO Manual
+*** TODO Miscellany
+***** TODO QUADRATIC-ROOTS
+******* TODO Accept a minimum value, maybe? Or just do the positive roots.
+	-1.0 or 0.0 is a nice way to indicate no solutions, anyways.
 *** TODO VEC
 ***** DONE VEC type
+***** TODO Additional operations
+******* TODO NORMALIZED-VEC
+******* TODO NORMALIZED-CROSS-PRODUCT
+******* TODO NORMALIZED-TRANSFORM-POINT
+******* DONE ADJUST-VEC
 ***** DONE Predicates
 ******* DONE Tests
 ******* DONE VECP

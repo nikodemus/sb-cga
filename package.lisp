@@ -21,8 +21,8 @@
    "Computer graphics algebra package for SBCL.")
   (:export
    #:+default-epsilon+
-   #:+pi+
    #:alloc-vec
+   #:adjust-vec #:%adjust-vec
    #:copy-vec #:%copy-vec
    #:cross-product
    #:dot-product
