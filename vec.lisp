@@ -19,11 +19,26 @@
 (in-package :sb-cga)
 
 (defmacro define-opt-fun (name lambda-list doc)
-  (let ((destructive-name (symbolicate "%%" name))
+  (let ((vm/1-name (symbolicate "%%" name "/1"))
         (vm-name (symbolicate "%" name))
         (form (gensym "FORM")))
     `(progn
-       (note-optimizable-fun ',name ',destructive-name)
+       (eval-when (:compile-toplevel :load-toplevel)
+         (note-optimizable-fun ',name ',vm/1-name))
+       (declaim (inline ,name))
+       (defun ,name ,lambda-list ,doc (,vm-name (alloc-vec) ,@lambda-list))
+       (define-compiler-macro ,name (&whole ,form ,@lambda-list)
+         (declare (ignore ,@lambda-list))
+         (optimize-vec-allocation ,form)))))
+
+(defmacro define-opt-fun2 (name lambda-list doc)
+  (let ((vm/1-name (symbolicate "%%" name "/1"))
+        (vm/2-name (symbolicate "%%" name "/2"))
+        (vm-name (symbolicate "%" name))
+        (form (gensym "FORM")))
+    `(progn
+       (eval-when (:compile-toplevel :load-toplevel)
+         (note-optimizable-fun ',name ',vm/1-name ',vm/2-name))
        (declaim (inline ,name))
        (defun ,name ,lambda-list ,doc (,vm-name (alloc-vec) ,@lambda-list))
        (define-compiler-macro ,name (&whole ,form ,@lambda-list)
@@ -46,8 +61,8 @@
 
 ;;;; COPYING
 
-(declaim (inline %%copy-vec))
-(defun %%copy-vec (vec)
+(declaim (inline %%copy-vec/1))
+(defun %%copy-vec/1 (vec)
   ;; Not really a copy, but allows optimizing copies away.
   vec)
 
@@ -58,11 +73,11 @@
 ;;;; ARITHMETIC
 
 (declaim (ftype (sfunction (vec vec) vec) vec+))
-(define-opt-fun vec+ (a b)
+(define-opt-fun2 vec+ (a b)
   "Add VEC A and VEC B, return result as a freshly allocated VEC.")
 
 (declaim (ftype (sfunction (vec vec) vec) vec-))
-(define-opt-fun vec- (a b)
+(define-opt-fun2 vec- (a b)
   "Substract VEC B from VEC A, return result as a freshly allocated VEC.")
 
 (declaim (ftype (sfunction (vec single-float)) vec*))
@@ -83,7 +98,7 @@ VEC.")
   (%dot-product a b))
 
 (declaim (ftype (sfunction (vec vec) vec) hadamard-product))
-(define-opt-fun hadamard-product (a b)
+(define-opt-fun2 hadamard-product (a b)
   "Compute hadamard product (elementwise product) of VEC A and VEC B,
 return result as a freshly allocated VEC.")
 
@@ -97,7 +112,7 @@ return result as a freshly allocated VEC.")
   "Normalize VEC A, return result as a freshly allocated VEC.")
 
 (declaim (ftype (sfunction (vec vec single-float) vec) vec-lerp))
-(define-opt-fun vec-lerp (a b f)
+(define-opt-fun2 vec-lerp (a b f)
   "Linear interpolate VEC A and VEC B using single-float F as the
 interpolation factor, return result as a freshly allocated VEC.")
 
@@ -185,7 +200,7 @@ EPSILON defaults to +DEFAULT-EPSILON+."
 ;;;; ADJUSTING A VECTOR
 
 (declaim (ftype (sfunction (vec vec single-float) vec) adjust-vec))
-(define-opt-fun adjust-vec (point direction distance)
+(define-opt-fun2 adjust-vec (point direction distance)
   "Multiply VEC DIRECTION by single-float DISTANCE adding the result to VEC POINT.
 Return result as a freshly allocated VEC.")
 
@@ -215,7 +230,7 @@ coordinates) as freshly allocted VECs, as the primary and secondary value."
     (flet ((tran (i j k)
              (let ((tmp (vec i j k)))
                (declare (dynamic-extent tmp))
-               (%%transform-point tmp matrix)
+               (%%transform-point/1 tmp matrix)
                (%vec-min min min tmp)
                (%vec-max max max tmp))))
       (tran (aref a 0) (aref a 1) (aref b 2))

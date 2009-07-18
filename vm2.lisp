@@ -1,4 +1,4 @@
-;;;; By Nikodemus Siivola <nikodemus@random-state.net>, 2009.
+;;;; by Nikodemus Siivola <nikodemus@random-state.net>, 2009.
 ;;;;
 ;;;; Permission is hereby granted, free of charge, to any person
 ;;;; obtaining a copy of this software and associated documentation files
@@ -34,6 +34,13 @@
          #-sb-cga-sse2
          (progn ,@forms)))))
 
+;;;; COMPARISON
+
+(define-vm-fun %vec= (a b)
+  (macrolet ((dim (n)
+               `(= (aref a ,n) (aref b ,n))))
+    (and (dim 0) (dim 1) (dim 2))))
+
 ;;;; VECTOR COPYING
 
 (define-vm-fun %copy-vec (result vec)
@@ -56,8 +63,8 @@
     (dim 2)
     result))
 
-(define-vm-fun %%vec+ (a b)
-  (%vec+ a a b))
+(define-vm-fun %%vec+/1 (a b) (%vec+ a a b))
+(define-vm-fun %%vec+/2 (a b) (%vec+ b a b))
 
 ;;;; VECTOR SUBSTRACTION
 
@@ -71,8 +78,8 @@ Unsafe."
     (dim 2)
     result))
 
-(define-vm-fun %%vec- (a b)
-  (%vec- a a b))
+(define-vm-fun %%vec-/1 (a b) (%vec- a a b))
+(define-vm-fun %%vec-/2 (a b) (%vec- b a b))
 
 ;;;; VECTOR/SCALAR MULTIPLICATION
 
@@ -86,8 +93,7 @@ RESULT. Unsafe."
     (dim 2)
     result))
 
-(define-vm-fun %%vec* (a f)
-  (%vec* a a f))
+(define-vm-fun %%vec*/1 (a f) (%vec* a a f))
 
 ;;;; VECTOR/SCALAR DIVISION
 
@@ -101,8 +107,7 @@ Unsafe."
     (dim 2)
     result))
 
-(define-vm-fun %%vec/ (a f)
-  (%vec/ a a f))
+(define-vm-fun %%vec//1 (a f) (%vec/ a a f))
 
 ;;;; DOT PRODUCT
 
@@ -123,8 +128,8 @@ result in VEC RESULT. Return RESULT. Unsafe."
     (dim 2)
     result))
 
-(define-vm-fun %%hadamard-product (a b)
-  (%hadamard-product a a b))
+(define-vm-fun %%hadamard-product/1 (a b) (%hadamard-product a a b))
+(define-vm-fun %%hadamard-product/2 (a b) (%hadamard-product b a b))
 
 ;;;; LENGTH
 
@@ -147,8 +152,7 @@ result in VEC RESULT. Return RESULT. Unsafe."
           (aref result 2) (/ vc len))
     result))
 
-(define-vm-fun %%normalize (a)
-  (%normalize a a))
+(define-vm-fun %%normalize/1 (a) (%normalize a a))
 
 ;;;; LINEAR INTERPOLATION
 
@@ -163,8 +167,8 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
       (dim 2))
     result))
 
-(define-vm-fun %%vec-lerp (a b d)
-  (%vec-lerp a a b f))
+(define-vm-fun %%vec-lerp/1 (a b d) (%vec-lerp a a b f))
+(define-vm-fun %%vec-lerp/2 (a b d) (%vec-lerp b a b f))
 
 ;;;; TRANSFORMING A VECTOR -- either as a point or a direction
 
@@ -184,7 +188,7 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
       (dim 2)
       result)))
 
-(define-vm-fun %%transform-point (vec matrix)
+(define-vm-fun %%transform-point/1 (vec matrix)
   (%transform-point vec vec matrix))
 
 (define-vm-fun %transform-direction (result vec matrix)
@@ -202,7 +206,7 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
       (dim 2)
       result)))
 
-(define-vm-fun %%transform-direction (vec matrix)
+(define-vm-fun %%transform-direction/1 (vec matrix)
   (%transform-direction vec vec matrix))
 
 ;;;; ADJUSTING A VECTOR
@@ -218,8 +222,10 @@ Store result in RESULT, and return it."
     (dim 2)
     result))
 
-(define-vm-fun %%adjust-vec (point direction distance)
+(define-vm-fun %%adjust-vec/1 (point direction distance)
   (%adjust-vec point point direction distance))
+(define-vm-fun %%adjust-vec/2 (point direction distance)
+  (%adjust-vec direction point direction distance))
 
 ;;;; Mapping from n-ary consing to non-consing versions where the first
 ;;;; argument is both an operand an a place to store the result.
@@ -227,19 +233,36 @@ Store result in RESULT, and return it."
 (defvar *optimizable-funs* nil)
 
 (defun optimize-vec-allocation (form)
-  ;; rewrite (foo (bar ...) ...) into (%foo/1 (bar ...) ...)
-  (destructuring-bind (name arg &rest more) form
-    (if (and (consp arg) (assoc (car arg) *optimizable-funs* :test #'eq))
-          (let* ((destructive-name (cdr (assoc name *optimizable-funs* :test #'eq)))
-                 (opt `(,destructive-name ,arg ,@more)))
-            #+nil
-            (break "~S -> ~S" form opt)
-            opt)
-          form)))
+  ;; If the first or second argument is known to return a freshly
+  ;; consed value, reuse it by rewriting:
+  ;;
+  ;;  (foo (bar ...) ...)   -> (%%foo/1 (bar ...) ...)
+  ;;  (foo x (bar ...) ...) -> (%%foo/2 x (bar ...) ...)
+  ;;
+  (flet ((opt-arg-p (arg)
+           (and (consp arg)
+                (assoc (car arg) *optimizable-funs* :test #'eq))))
+    (destructuring-bind (name/1 name/2)
+        (cdr (assoc (car form) *optimizable-funs* :test #'eq))
+      (let ((res (if name/2
+                     (destructuring-bind (arg1 arg2 &rest more) (cdr form)
+                       (cond ((opt-arg-p arg1)
+                              `(,name/1 ,arg1 ,arg2 ,@more))
+                             ((opt-arg-p arg2)
+                              `(,name/2 ,arg1 ,arg2 ,@more))
+                             (t
+                              form)))
+                     (destructuring-bind (arg1 &rest more) (cdr form)
+                       (if (opt-arg-p arg1)
+                           `(,name/1 ,arg1 ,@more)
+                           form)))))
+        #+nil
+        (unless (eq form res) (break "~S -> ~S" form res))
+        res))))
 
-(defun note-optimizable-fun (name destructive-name)
+(defun note-optimizable-fun (name name/1 &optional name/2)
   (let ((cell (assoc name *optimizable-funs* :test #'eq)))
     (if cell
-        (setf (cdr cell) destructive-name)
-        (push (cons name destructive-name) *optimizable-funs*))
+        (setf (cdr cell) (list name/1 name/2))
+        (push (list name name/1 name/2) *optimizable-funs*))
     name))
