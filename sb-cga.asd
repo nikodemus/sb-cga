@@ -25,4 +25,5 @@
    (:file "vm1")
    (:file "vm2")
    (:file "vec")
-   (:file "matrix")))
+   (:file "matrix")
+   (:file "roots")))
