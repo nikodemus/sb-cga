@@ -9,16 +9,23 @@
 *** DONE Defpackage
 *** TODO Manual
 *** TODO Miscellany
+***** TODO POSITIVE-QUADRATIC-ROOTS
 ***** TODO QUADRATIC-ROOTS
-******* TODO Accept a minimum value, maybe? Or just do the positive roots.
-	-1.0 or 0.0 is a nice way to indicate no solutions, anyways.
+***** TODO POSITIVE-CUBIC-ROOTS
+***** TODO CUBIC-ROOTS
+***** TODO POSITIVE-QUADRIC-ROOTS
+***** TODO QUADRIC-ROOTS
 *** TODO VEC
 ***** DONE VEC type
 ***** TODO Additional operations
 ******* TODO NORMALIZED-VEC
 ******* TODO NORMALIZED-CROSS-PRODUCT
 ******* TODO NORMALIZED-TRANSFORM-POINT
+	The reason these seem worthwhile is that they avoid memory
+	traffic -- but it is probably not a good idea to expose
+	them as part of the interface!
 ******* DONE ADJUST-VEC
+******* TODO Implement VEC-MIN/MAX using MINPS/MAXPS.
 ***** DONE Predicates
 ******* DONE Tests
 ******* DONE VECP

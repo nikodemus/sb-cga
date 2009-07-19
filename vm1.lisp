@@ -36,49 +36,7 @@
 ;;;; instructions.)
 #+x86-64
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (pushnew :sb-cga-sse2 *features*)
-  #+nil
-  (pushnew :sb-cga-sse3 *features*))
-
-#+sb-cga-sse3
-(progn
-  ;; KLUDGE KLUDGE: Since instruction formats and arg types are not present in
-  ;; target, we need to redefine these here.
-  (sb-disassem:define-arg-type wrxb
-      :prefilter #'sb-vm::prefilter-wrxb)
-  (sb-disassem:define-arg-type xmmreg
-      :prefilter #'sb-vm::prefilter-reg-r
-      :printer #'sb-vm::print-xmmreg)
-  (sb-disassem:define-arg-type xmmreg/mem
-      :prefilter #'sb-vm::prefilter-reg/mem
-      :printer #'sb-vm::print-xmmreg/mem)
-  (sb-disassem:define-instruction-format (ext-xmm-xmm/mem 32
-                                          :default-printer
-                                          '(:name :tab reg ", " reg/mem))
-    (prefix  :field (byte 8 0))
-    (x0f     :field (byte 8 8)    :value #x0f)
-    (op      :field (byte 8 16))
-    (reg/mem :fields (list (byte 2 30) (byte 3 24))
-                                  :type 'xmmreg/mem)
-    (reg     :field (byte 3 27)   :type 'xmmreg))
-  (sb-disassem:define-instruction-format (ext-rex-xmm-xmm/mem 40
-                                          :default-printer
-                                          '(:name :tab reg ", " reg/mem))
-    (prefix  :field (byte 8 0))
-    (rex     :field (byte 4 12)   :value #b0100)
-    (wrxb    :field (byte 4 8)    :type 'wrxb)
-    (x0f     :field (byte 8 16)   :value #x0f)
-    (op      :field (byte 8 24))
-    (reg/mem :fields (list (byte 2 38) (byte 3 32))
-                                  :type 'xmmreg/mem)
-    (reg     :field (byte 3 35)   :type 'xmmreg))
-  (sb-assem:define-instruction haddps (segment dst src)
-    (:printer ext-xmm-xmm/mem
-              ((prefix #xf2) (op #x7c)))
-    (:printer ext-rex-xmm-xmm/mem
-              ((prefix #xf2) (op #x7c)))
-    (:emitter
-     (sb-vm::emit-regular-sse-inst segment dst src #xf2 #x7c))))
+  (pushnew :sb-cga-sse2 *features*))
 
 #+sb-cga-sse2
 (progn
@@ -353,7 +311,7 @@
 (defknown %dot-product (vec vec) single-float
     (any #+sb-cga-sse2 always-translatable))
 
-#+(and sb-cga-sse2 (not sb-cga-sse3))
+#+sb-cga-sse2
 (define-vop (%dot-product)
   (:translate %dot-product)
   (:policy :fast-safe)
@@ -376,28 +334,6 @@
     ;; Add
     (inst addss result tmp2)
     (inst addss result tmp3)))
-
-#+sb-cga-sse3
-(define-vop (%dot-product)
-  (:translate %dot-product)
-  (:policy :fast-safe)
-  (:args (vector1 :scs (descriptor-reg))
-         (vector2 :scs (descriptor-reg)))
-  (:arg-types * *)
-  (:results (result :scs (single-reg)))
-  (:temporary (:sc single-reg) tmp)
-  (:result-types single-float)
-  (:generator 10
-    ;; Load VECTOR1
-    (load-slice tmp vector1)
-    ;; Multiply by VECTOR2
-    (if (sb-c:location= vector1 vector2)
-        (inst mulps tmp tmp)
-        (inst mulps tmp (ea-for-slice vector2)))
-    ;; Horizontal add
-    (inst haddps tmp tmp)
-    (inst haddps tmp tmp)
-    (inst movss result tmp)))
 
 ;;;; HADAMARD PRODUCT
 
@@ -454,7 +390,7 @@
 (defknown %vec-length (vec) single-float
     (any #+sb-cga-sse2 always-translatable))
 
-#+(and sb-cga-sse2 (not sb-cga-sse3))
+#+sb-cga-sse2
 (define-vop (%vec-length)
   (:translate %vec-length)
   (:policy :fast-safe)
@@ -475,26 +411,12 @@
     (inst addss result tmp2)
     (inst sqrtss result result)))
 
-#+sb-cga-sse3
-(define-vop (%vec-length)
-  (:translate %vec-length)
-  (:policy :fast-safe)
-  (:args (vector :scs (descriptor-reg)))
-  (:results (result :scs (single-reg)))
-  (:result-types single-float)
-  (:generator 10
-    (load-slice result vector)
-    (inst mulps result result)
-    (inst haddps result result)
-    (inst haddps result result)
-    (inst sqrtss result result)))
-
 ;;;; NORMALIZATION
 
 (defknown %normalize (vec vec) vec (any)
   :result-arg 0)
 
-#+(and sb-cga-sse2 (not sb-cga-sse3))
+#+sb-cga-sse2
 (define-vop (%normalize)
   (:translate %normalize)
   (:policy :fast-safe)
@@ -532,37 +454,11 @@
     (inst movss (ea-for-data result-vector 2) tmp6)
     (move result result-vector)))
 
-#+sb-cga-sse3
-(define-vop (%normalize)
-  (:translate %normalize)
-  (:policy :fast-safe)
-  (:args (result-vector :scs (descriptor-reg) :target result)
-         (vector :scs (descriptor-reg)))
-  (:results (result :scs (descriptor-reg)))
-  (:temporary (:sc single-reg) tmp1)
-  (:temporary (:sc single-reg) tmp2)
-  (:generator 10
-    (load-slice tmp1 vector)
-    (inst movaps tmp2 tmp1)
-    ;; Multiply
-    (inst mulps tmp1 tmp1)
-    ;; Horizontal add
-    (inst haddps tmp1 tmp1)
-    (inst haddps tmp1 tmp1)
-    ;; Reciprocal square root, distribute and multiply
-    (inst rsqrtss tmp1 tmp1)
-    (inst unpcklps tmp1 tmp1)
-    (inst unpcklps tmp1 tmp1)
-    (inst mulps tmp2 tmp1)
-    ;; Result
-    (store-slice tmp2 result-vector)
-    (move result result-vector)))
-
 (defknown %%normalize/1 (vec) vec
     (any #+sb-cga-sse2 always-translatable)
   :result-arg 0)
 
-#+(and sb-cga-sse2 (not sb-cga-sse3))
+#+sb-cga-sse2
 (define-vop (%%normalize/1)
   (:translate %%normalize/1)
   (:policy :fast-safe)
@@ -597,31 +493,6 @@
     (inst movss (ea-for-data vector 0) tmp4)
     (inst movss (ea-for-data vector 1) tmp5)
     (inst movss (ea-for-data vector 2) tmp6)
-    (move result vector)))
-
-#+sb-cga-sse3
-(define-vop (%%normalize/1)
-  (:translate %%normalize/1)
-  (:policy :fast-safe)
-  (:args (vector :scs (descriptor-reg) :target result))
-  (:results (result :scs (descriptor-reg)))
-  (:temporary (:sc single-reg) tmp1)
-  (:temporary (:sc single-reg) tmp2)
-  (:generator 10
-    (load-slice tmp1 vector)
-    (inst movaps tmp2 tmp1)
-    ;; Multiply
-    (inst mulps tmp1 tmp1)
-    ;; Horizontal add
-    (inst haddps tmp1 tmp1)
-    (inst haddps tmp1 tmp1)
-    ;; Reciprocal square root, distribute and multiply
-    (inst rsqrtss tmp1 tmp1)
-    (inst unpcklps tmp1 tmp1)
-    (inst unpcklps tmp1 tmp1)
-    (inst mulps tmp2 tmp1)
-    ;; Result
-    (store-slice tmp2 vector)
     (move result vector)))
 
 ;;;; LINEAR INTERPOLATION
