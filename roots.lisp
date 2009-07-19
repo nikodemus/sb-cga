@@ -25,9 +25,9 @@
                 quadratic-roots-above)
          (inline quadratic-roots-above))
 (defun quadratic-roots-above (limit a b c)
-  "Roots greater than LIMIT for Ax^2+Bx+C. Smallest positive root is returned
-as primary value, and the other -- if any -- as secondary. LIMIT for either
-value indicates lack of a root above LIMIT."
+  "Real-valued roots greater than LIMIT for Ax^2+Bx+C. Smallest positive root
+is returned as primary value, and the other as secondary. LIMIT indicates lack
+of a real-valued root above LIMIT."
   (declare (optimize speed))
   (let ((d (- (* b b) (* 4.0 a c))))
     (tagbody
@@ -51,3 +51,25 @@ value indicates lack of a root above LIMIT."
                    (values r2 limit)))
              (go :nothing))))))
 
+(declaim (ftype (function (single-float single-float single-float)
+                          (values single-float single-float &optional))
+                quadratic-roots)
+         (inline quadratic-roots))
+(defun quadratic-roots (a b c)
+  "Real-valued roots for Ax^2+Bx+C. Smallest positive root is returned as
+primary value, and the otheras secondary. NaN indicates lack of a real-valued
+root."
+  (declare (optimize speed))
+  (let ((d (- (* b b) (* 4.0 a c)))
+        (nan #.(/ 0.0 0.0)))
+    (if (< d 0.0)
+        (values nan nan)
+        (let* ((sqrt-d (sqrt d))
+               (1/2a (/ 1.0 (+ a a)))
+               (-b (- b))
+               (r1 (* (+ -b sqrt-d) 1/2a))
+               (r2 (* (- -b sqrt-d) 1/2a)))
+          (when (> r1 r2)
+            (psetf r2 r1
+                   r1 r2))
+          (values r1 r2)))))

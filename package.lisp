@@ -37,6 +37,7 @@
    #:matrix~
    #:mref
    #:normalize #:%normalize
+   #:quadratic-roots
    #:quadratic-roots-above
    #:reorient
    #:rotate #:rotate*
