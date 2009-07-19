@@ -24,6 +24,8 @@
 
 (in-package :sb-cga-test)
 
+(defconstant +pi+ (coerce pi 'single-float))
+
 ;;; Cheap, cheap.
 (defmacro is ((test result (op &rest args) &rest test-args))
   (let* ((temps (sb-int:make-gensym-list (length args)))
@@ -131,12 +133,31 @@
                      (vec 0.5 1.0 1.5) 0.5)))
   t)
 
-(deftest dot-product.1
-    (is (= 3.0 (dot-product (vec 1.0 1.0 1.0)
-                            (vec 1.0 1.0 1.0))))
-  t)
+(deftest dot-product
+    (flet ((dot (ax ay az bx by bz)
+             (+ (* ax bx) (* ay by) (* az bz)))
+           (r (f)
+             (- (random (+ 1.0 f)) (/ (+ 1.0 f) 2.0))))
+      (dotimes (i 100000)
+        (let* ((ax (r i))
+               (ay (r i))
+               (az (r i))
+               (bx (r i))
+               (by (r i))
+               (bz (r i))
+               (a (vec ax ay az))
+               (b (vec bx by bz)))
+          (unless (= (dot ax ay az bx by bz)
+                     (dot-product a b))
+            (return (list a b))))))
+  nil)
 
 (deftest dot-product.2
+    (is (= 0.0 (dot-product (vec 0.0 0.0 0.0)
+                            (vec 1.1 2.2 3.3))))
+  t)
+
+(deftest dot-product.3
     (is (= 0.0 (dot-product (vec 0.0 0.0 0.0)
                             (vec 1.1 2.2 3.3))))
   t)
@@ -167,17 +188,17 @@
   t)
 
 (deftest normalize.1
-    (is (vec= (vec 0.26726124 0.5345225 0.8017837)
-              (normalize (vec 1.0 2.0 3.0))))
+    (is (vec~ (vec 0.26726124 0.5345225 0.8017837)
+               (normalize (vec 1.0 2.0 3.0))
+               0.001))
   t)
 
 (deftest normalize.2
-    (= 0.99999994 (vec-length (normalize (vec 1.0 2.0 3.0))))
+    (< 0.999 (vec-length (normalize (vec 1.0 2.0 3.0))) 1.0)
   t)
 
 (deftest %normalize.1
-    (= 0.99999994 (vec-length (%normalize (alloc-vec)
-                                          (vec 1.0 2.0 4.0))))
+    (< 0.999 (vec-length (%normalize (alloc-vec) (vec 1.0 2.0 4.0))) 1.0)
   t)
 
 (deftest vec-lerp.1
@@ -374,14 +395,16 @@
                                    (rotate-around (vec 0.0 0.0 1.0) +pi+)))
             (vec~ (vec 0.0 1.0 0.0)
                   (transform-point (vec 1.0 0.0 0.0)
-                                   (rotate-around (normalize (vec 1.0 1.0 0.0)) +pi+))))
+                                   (rotate-around (normalize (vec 1.0 1.0 0.0)) +pi+))
+                  0.001))
   t t t t)
 
 (deftest reorient.1
     (vec~ (normalize (vec 1.0 1.0 0.5))
           (transform-point (vec 1.0 0.0 0.0)
                            (reorient (vec 1.0 0.0 0.0)
-                                     (vec 1.0 1.0 0.5))))
+                                     (vec 1.0 1.0 0.5)))
+          0.001)
   t)
 
 (deftest inverse-matrix.1
