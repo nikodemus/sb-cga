@@ -55,7 +55,22 @@
   (defmacro load-slice (xmm vector &optional (index 0))
     `(inst movaps ,xmm (ea-for-slice ,vector ,index)))
   (defmacro store-slice (xmm vector &optional (index 0))
-    `(inst movaps (ea-for-slice ,vector ,index) ,xmm)))
+    `(inst movaps (ea-for-slice ,vector ,index) ,xmm))
+  (defmacro fill-xmm (target source &optional (index 0))
+    `(progn
+       ,(if (consp source)
+            `(inst movss ,target ,source)
+            `(unless (sb-c:location= ,target ,source)
+               (inst movaps ,target ,source)))
+       ,@(ecase index
+                (0 `((inst unpcklps ,target ,target)
+                     (inst unpcklps ,target ,target)))
+                (1 `((inst unpcklps ,target ,target)
+                     (inst unpckhps ,target ,target)))
+                (2 `((inst unpckhps ,target ,target)
+                     (inst unpcklps ,target ,target)))
+                (3 `((inst unpckhps ,target ,target)
+                     (inst unpckhps ,target ,target)))))))
 
 ;;;; VECTOR COMPARISON
 
@@ -214,15 +229,12 @@
   (:policy :fast-safe)
   (:args (result-vector :scs (descriptor-reg) :target result)
          (vector :scs (descriptor-reg))
-         (float :scs (single-reg)))
+         (f :scs (single-reg) :target tmp))
   (:arg-types * * single-float)
   (:results (result :scs (descriptor-reg)))
   (:temporary (:sc single-reg) tmp)
   (:generator 10
-    ;; Fill XMM reg with the float.
-    (inst movss tmp float)
-    (inst unpcklps tmp tmp)
-    (inst unpcklps tmp tmp)
+    (fill-xmm tmp f)
     ;; Multiply
     (inst mulps tmp (ea-for-slice vector))
     ;; Save result to result vector
@@ -238,15 +250,12 @@
   (:translate %%vec*/1)
   (:policy :fast-safe)
   (:args (vector :scs (descriptor-reg) :target result)
-         (float :scs (single-reg)))
+         (f :scs (single-reg) :target result))
   (:arg-types * single-float)
   (:results (result :scs (descriptor-reg)))
   (:temporary (:sc single-reg) tmp)
   (:generator 10
-    ;; Fill XMM reg with the float.
-    (inst movss tmp float)
-    (inst unpcklps tmp tmp)
-    (inst unpcklps tmp tmp)
+    (fill-xmm tmp f)
     ;; Multiply
     (inst mulps tmp (ea-for-slice vector))
     (store-slice tmp vector)
@@ -263,7 +272,7 @@
   (:policy :fast-safe)
   (:args (result-vector :scs (descriptor-reg) :target result)
          (vector :scs (descriptor-reg))
-         (float :scs (single-reg)))
+         (f :scs (single-reg) :target floats))
   (:arg-types * * single-float)
   (:results (result :scs (descriptor-reg)))
   (:temporary (:sc single-reg) tmp)
@@ -271,10 +280,7 @@
   (:generator 10
     ;; Load vector into TMP
     (load-slice tmp vector)
-    ;; Fill XMM reg with the float.
-    (inst movss floats float)
-    (inst unpcklps floats floats)
-    (inst unpcklps floats floats)
+    (fill-xmm floats f)
     ;; Divide
     (inst divps tmp floats)
     ;; Save result to source vector
@@ -290,16 +296,13 @@
   (:translate %%vec//1)
   (:policy :fast-safe)
   (:args (vector :scs (descriptor-reg) :target result)
-         (float :scs (single-reg)))
+         (f :scs (single-reg) :target floats))
   (:arg-types * single-float)
   (:results (result :scs (descriptor-reg)))
   (:temporary (:sc single-reg) tmp)
   (:temporary (:sc single-reg) floats)
   (:generator 10
-    ;; Fill XMM reg with the float.
-    (inst movss floats float)
-    (inst unpcklps floats floats)
-    (inst unpcklps floats floats)
+    (fill-xmm floats f)
     ;; Divide
     (load-slice tmp vector)
     (inst divps tmp floats)
@@ -507,21 +510,15 @@
   (:args (result-vector :scs (descriptor-reg) :target result)
          (vector1 :scs (descriptor-reg))
          (vector2 :scs (descriptor-reg))
-         (float :scs (single-reg)))
+         (f :scs (single-reg) :target floats))
   (:arg-types * * * single-float)
   (:results (result :scs (descriptor-reg)))
   (:temporary (:sc single-reg) floats)
   (:temporary (:sc single-reg) 1-floats)
   (:generator 10
-    ;; Fill XMM reg with the float.
-    (inst movss floats float)
-    (inst unpcklps floats floats)
-    (inst unpcklps floats floats)
-    ;; Same for the 1.0-float
-    (inst movss 1-floats (register-inline-constant 1.0))
-    (inst subss 1-floats float)
-    (inst unpcklps 1-floats 1-floats)
-    (inst unpcklps 1-floats 1-floats)
+    (fill-xmm floats f)
+    (fill-xmm 1-floats (register-inline-constant 1.0))
+    (inst subps 1-floats floats)
     ;; Multiply VECTOR1 by 1-FLOATS, and VECTOR2 by FLOATS
     (inst mulps 1-floats (ea-for-slice vector1))
     (inst mulps floats (ea-for-slice vector2))
@@ -546,29 +543,23 @@
               (:policy :fast-safe)
               (:args (vector1 :scs (descriptor-reg) ,@target1)
                      (vector2 :scs (descriptor-reg) ,@target2)
-                     (float :scs (single-reg)))
+                     (f :scs (single-reg) :target floats))
               (:arg-types * * single-float)
               (:results (result :scs (descriptor-reg)))
               (:temporary (:sc single-reg) floats)
               (:temporary (:sc single-reg) 1-floats)
               (:generator 10
-                ;; Fill XMM reg with the float.
-                (inst movss floats float)
-                (inst unpcklps floats floats)
-                (inst unpcklps floats floats)
-                ;; Same for the 1.0-float
-                (inst movss 1-floats (register-inline-constant 1.0))
-                (inst subss 1-floats float)
-                (inst unpcklps 1-floats 1-floats)
-                (inst unpcklps 1-floats 1-floats)
+                (fill-xmm floats f)
+                (fill-xmm 1-floats (register-inline-constant 1.0))
+                (inst subps 1-floats floats)
                 ;; Multiply VECTOR1 by 1-FLOATS, and VECTOR2 by FLOATS
                 (inst mulps 1-floats (ea-for-slice vector1))
                 (inst mulps floats (ea-for-slice vector2))
                 ;; Add
                 (inst addps floats 1-floats)
                 ;; Save result and return
-                (store-slice floats vector1)
-                (move result vector1)))))
+                (store-slice floats ,result)
+                (move result ,result)))))
   (def %%vec-lerp/1 (:target result) () vector1)
   (def %%vec-lerp/2 () (:target result) vector2))
 
@@ -748,15 +739,12 @@
   (:args (result-vector :scs (descriptor-reg) :target result)
          (point :scs (descriptor-reg))
          (direction :scs (descriptor-reg))
-         (distance :scs (single-reg)))
+         (distance :scs (single-reg) :target tmp))
   (:arg-types * * * single-float)
   (:results (result :scs (descriptor-reg)))
   (:temporary (:sc single-reg) tmp)
   (:generator 10
-    ;; Fill TMP with DISTANCE
-    (inst movss tmp distance)
-    (inst unpcklps tmp tmp)
-    (inst unpcklps tmp tmp)
+    (fill-xmm tmp distance)
     ;; Multiply by DIRECTION
     (inst mulps tmp (ea-for-slice direction))
     ;; Add POINT
@@ -780,15 +768,12 @@
                 (:policy :fast-safe)
                 (:args (point :scs (descriptor-reg) ,@target1)
                        (direction :scs (descriptor-reg) ,@target2)
-                       (distance :scs (single-reg)))
+                       (distance :scs (single-reg) :target tmp))
                 (:arg-types * * single-float)
                 (:results (result :scs (descriptor-reg)))
                 (:temporary (:sc single-reg) tmp)
                 (:generator 10
-                  ;; Fill TMP with DISTANCE
-                  (inst movss tmp distance)
-                  (inst unpcklps tmp tmp)
-                  (inst unpcklps tmp tmp)
+                  (fill-xmm tmp distance)
                   ;; Multiply by DIRECTION
                   (inst mulps tmp (ea-for-slice direction))
                   ;; Add POINT
@@ -797,3 +782,87 @@
                   (move result ,result)))))
   (def %%adjust-vec/1 (:target result) () point)
   (def %%adjust-vec/2 () (:target result) direction))
+
+;;;; QUADRATIC ROOTS
+
+(defknown %positive-quadratic-roots (single-float single-float single-float)
+    (values (single-float 0.0) (single-float 0.0))
+    (any #+sb-cga-sse2 always-translatable))
+
+#+sb-cga-sse2
+(define-vop (%positive-quadratic-roots)
+  (:translate %positive-quadratic-roots)
+  (:policy :fast-safe)
+  (:args (a :scs (single-reg))
+         (b :scs (single-reg))
+         (c :scs (single-reg)))
+  (:arg-types single-float single-float single-float)
+  (:results (r1 :scs (single-reg))
+            (r2 :scs (single-reg)))
+  (:result-types single-float single-float)
+  (:temporary (:sc single-reg) 1/2a)
+  (:temporary (:sc single-reg) d)
+  (:temporary (:sc single-reg) tmp)
+  (:generator 10
+    ;; d = (- (* b b) (* 4.0 a c))
+    (inst movss d b)
+    (inst mulss d b)
+    (inst movss tmp a)
+    (inst mulss tmp c)
+    (inst addss tmp tmp)
+    (inst addss tmp tmp)
+    (inst subss d tmp)
+
+    ;; Compare to zero
+    (inst xorps tmp tmp)
+    (inst ucomiss d tmp)
+    (inst jmp :le TMP-TMP)
+
+    ;; Square root of D into D
+    (inst sqrtss d d)
+    ;; 1/2A
+    (inst movss 1/2a a)
+    (inst addss 1/2a 1/2a)
+    (inst movss tmp (register-inline-constant 1.0))
+    (inst divss tmp 1/2a)
+    (inst movss 1/2a tmp)
+    ;; -B into TMP
+    (inst xorps tmp tmp)
+    (inst subss tmp b)
+
+    ;; r1 = (/ (+ (- b) (sqrt d)) 2a)
+    (inst movss r1 tmp)
+    (inst addss r1 d)
+    (inst mulss r1 1/2a)
+
+    ;; r2 - (/ (- (- b) (sqrt d)) 2a)
+    (inst movss r2 tmp)
+    (inst subss r2 d)
+    (inst mulss r2 1/2a)
+    (inst ucomiss r2 r1)
+    (inst jmp :g R2>R1)
+
+    ;; R1>R2
+    (inst movss tmp r2)
+    (inst movss r2 r1)
+    (inst movss r1 tmp)
+
+    R2>R1
+    ;; Compare R2 to zero
+    (inst xorps tmp tmp)
+    (inst ucomiss r2 tmp)
+    (inst jmp :ng TMP-TMP)
+    ;; Compare R1 to zero
+    (inst ucomiss r1 tmp)
+    (inst jmp :ng RESULTS)
+    ;; R2 is the only positive result
+    (inst movss r1 r2)
+    (inst movss r2 tmp)
+    (inst jmp RESULTS)
+
+    TMP-TMP
+    (inst movss r1 tmp)
+    (inst movss r2 tmp)
+
+    RESULTS))
+
