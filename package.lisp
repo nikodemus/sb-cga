@@ -24,7 +24,7 @@
    #:alloc-vec
    #:adjust-vec #:%adjust-vec
    #:copy-vec #:%copy-vec
-   #:cross-product
+   #:cross-product #:%cross-product
    #:dot-product
    #:hadamard-product #:%hadamard-product
    #:identity-matrix
@@ -43,6 +43,7 @@
    #:rotate #:rotate*
    #:rotate-around
    #:scale #:scale*
+   #:sxhash-vec
    #:transform-bounds
    #:transform-direction #:%transform-direction
    #:transform-point #:%transform-point

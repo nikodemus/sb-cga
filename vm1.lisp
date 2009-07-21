@@ -338,6 +338,14 @@
     (inst addss result tmp2)
     (inst addss result tmp3)))
 
+;;;; CROSS PRODUCT
+;;;;
+;;;; No VOP, just the defknown.
+
+(defknown %cross-product (vec vec vec) vec
+    (any)
+  :result-arg 0)
+
 ;;;; HADAMARD PRODUCT
 
 (defknown %hadamard-product (vec vec vec) vec (any)

@@ -164,20 +164,27 @@ VEC."
       (%vec-max result result vec))
     result))
 
-(declaim (ftype (sfunction (vec vec) vec) cross-product))
-(defun cross-product (a b)
-  "Cross product of 3D vector A and 3D vector B, return result as a freshly
-allocated VEC."
-  (declare (optimize speed))
+;;;; CROSS-PRODUCT
+
+(defun %cross-product (result a b)
   (let ((a1 (aref a 0))
         (a2 (aref a 1))
         (a3 (aref a 2))
         (b1 (aref b 0))
         (b2 (aref b 1))
         (b3 (aref b 2)))
-    (vec (- (* a2 b3) (* a3 b2))
-         (- (* a3 b1) (* a1 b3))
-         (- (* a1 b2) (* a2 b1)))))
+    (setf (aref result 0) (- (* a2 b3) (* a3 b2))
+          (aref result 1) (- (* a3 b1) (* a1 b3))
+          (aref result 2) (- (* a1 b2) (* a2 b1)))
+    result))
+
+(declaim (ftype (sfunction (vec vec) vec) cross-product)
+         (inline cross-product))
+(defun cross-product (a b)
+  "Cross product of 3D vector A and 3D vector B, return result as a freshly
+allocated VEC."
+  (declare (optimize speed))
+  (%cross-product (alloc-vec) a b))
 
 ;;;; COMPARISON
 
@@ -241,3 +248,13 @@ coordinates) as freshly allocted VECs, as the primary and secondary value."
       (tran (aref b 0) (aref b 1) (aref a 2))
       (tran (aref b 0) (aref b 1) (aref b 2)))
     (values min max)))
+
+;;;; HASHING
+
+(defun sxhash-vec (vec)
+  (declare (type vec vec))
+  (logand most-positive-fixnum
+          (+ (sxhash (aref vec 0))
+             (sxhash (aref vec 1))
+             (sxhash (aref vec 2)))))
+
