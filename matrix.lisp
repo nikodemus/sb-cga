@@ -100,31 +100,43 @@ major order.)"
   (make-array 16 :element-type 'single-float))
 
 (declaim (ftype (sfunction () matrix) identity-matrix))
-(defun identity-matrix ()
-  "Construct an identity matrix."
-  (matrix 1.0 0.0 0.0 0.0
-          0.0 1.0 0.0 0.0
-          0.0 0.0 1.0 0.0
-          0.0 0.0 0.0 1.0))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun identity-matrix ()
+    "Construct an identity matrix."
+    (matrix 1.0 0.0 0.0 0.0
+            0.0 1.0 0.0 0.0
+            0.0 0.0 1.0 0.0
+            0.0 0.0 0.0 1.0)))
+
+(defconstant +identity-matrix+
+  (if (boundp '+identity-matrix+)
+      (symbol-value '+identity-matrix+)
+      (identity-matrix))
+  "Constant identity matrix.")
 
 ;;;; MATRIX MULTIPLICATION
 
 (declaim (ftype (sfunction (&rest matrix) matrix) matrix*))
 (defun matrix* (&rest matrices)
-  "Multiply MATRICES, return result as a freshly allocated MATRIX."
+  "Multiply MATRICES. The result might not be freshly allocated if all,
+or all but one multiplicant is an identity matrix."
   (labels ((mul (left more)
              (if more
-                 (let ((right (pop more))
-                       (result (zero-matrix)))
-                   (dotimes (i 4)
-                     (dotimes (j 4)
-                       (setf (mref result i j)
-                             (loop for k below 4
-                                   summing (* (mref left i k) (mref right k j))))))
-                   (mul result more))
+                 (if (eq left +identity-matrix+)
+                     (mul (pop more) more)
+                     (let ((right (pop more)))
+                       (if (eq +identity-matrix+ right)
+                           (mul left more)
+                           (let ((result (zero-matrix)))
+                             (dotimes (i 4)
+                               (dotimes (j 4)
+                                 (setf (mref result i j)
+                                       (loop for k below 4
+                                             summing (* (mref left i k) (mref right k j))))))
+                             (mul result more)))))
                  left)))
     (cond ((not matrices)
-           (identity-matrix))
+           +identity-matrix+)
           ((cdr matrices)
            (mul (car matrices) (cdr matrices)))
           (t
@@ -244,41 +256,49 @@ element of A is ignored."
 (defun inverse-matrix (matrix)
   "Inverse of MATRIX. Signals an error if there is no inverse."
   (declare (type matrix matrix))
-  (if (and (= 0.0 (mref matrix 3 0) (mref matrix 3 1) (mref matrix 3 2))
-           (= 1.0 (mref matrix 3 3)))
-      ;; Affine matrix, fast track (and less loss of accuracy from multiplications)
-      (let ((inverse (zero-matrix)))
-        ;; Inverse of the upper left 3x3
-        (let ((det (submatrix-determinant matrix)))
-          (unless (zerop det)
-            (macrolet ((inv ((i j) (ai aj bi bj) (ci cj di dj))
-                        `(setf (mref inverse ,(1- i) ,(1- j))
-                               (/ (- (* (mref matrix ,(1- ai) ,(1- aj))
-                                        (mref matrix ,(1- bi) ,(1- bj)))
-                                     (* (mref matrix ,(1- ci) ,(1- cj))
-                                        (mref matrix ,(1- di) ,(1- dj))))
-                                  det))))
-             (inv (1 1) (2 2 3 3) (2 3 3 2))
-             (inv (1 2) (1 3 3 2) (1 2 3 3))
-             (inv (1 3) (1 2 2 3) (1 3 2 2))
-             (inv (2 1) (2 3 3 1) (2 1 3 3))
-             (inv (2 2) (1 1 3 3) (1 3 3 1))
-             (inv (2 3) (1 3 2 1) (1 1 2 3))
-             (inv (3 1) (2 1 3 2) (2 2 3 1))
-             (inv (3 2) (1 2 3 1) (1 1 3 2))
-             (inv (3 3) (1 1 2 2) (1 2 2 1)))))
-        ;; translation: negation after dotting with upper rows
-        (let ((x (mref matrix 0 3))
-              (y (mref matrix 1 3))
-              (z (mref matrix 2 3)))
-          (dotimes (i 3)
-            (setf (mref inverse i 3) (- (+ (* x (mref inverse i 0))
-                                           (* y (mref inverse i 1))
-                                           (* z (mref inverse i 2)))))))
-        ;; affine bottom row (0 0 0 1)
-        (setf (mref inverse 3 3) 1.0)
-        inverse)
-      (generic-inverse-matrix matrix)))
+  (if (eq matrix +identity-matrix+)
+      +identity-matrix+
+      (if (and (= 0.0 (mref matrix 3 0) (mref matrix 3 1) (mref matrix 3 2))
+               (= 1.0 (mref matrix 3 3)))
+          ;; Affine matrix, fast track (and less loss of accuracy from multiplications)
+          (let ((inverse (zero-matrix)))
+            ;; Inverse of the upper left 3x3
+            (let ((det (submatrix-determinant matrix)))
+              (if (zerop det)
+                  ;; If the 3x3 is zero, we're fine -- otherwise punt to the complete
+                  ;; implementation.
+                  (dotimes (i 3)
+                    (dotimes (j 3)
+                      (unless (= 0.0 (mref matrix i j))
+                        (return-from inverse-matrix (generic-inverse-matrix matrix)))))
+                  (macrolet ((inv ((i j) (ai aj bi bj) (ci cj di dj))
+                             `(setf (mref inverse ,(1- i) ,(1- j))
+                                    (/ (- (* (mref matrix ,(1- ai) ,(1- aj))
+                                             (mref matrix ,(1- bi) ,(1- bj)))
+                                          (* (mref matrix ,(1- ci) ,(1- cj))
+                                             (mref matrix ,(1- di) ,(1- dj))))
+                                       det))))
+                  (inv (1 1) (2 2 3 3) (2 3 3 2))
+                  (inv (1 2) (1 3 3 2) (1 2 3 3))
+                  (inv (1 3) (1 2 2 3) (1 3 2 2))
+                  (inv (2 1) (2 3 3 1) (2 1 3 3))
+                  (inv (2 2) (1 1 3 3) (1 3 3 1))
+                  (inv (2 3) (1 3 2 1) (1 1 2 3))
+                  (inv (3 1) (2 1 3 2) (2 2 3 1))
+                  (inv (3 2) (1 2 3 1) (1 1 3 2))
+                  (inv (3 3) (1 1 2 2) (1 2 2 1)))))
+            ;; translation: negation after dotting with upper rows
+            (let ((x (mref matrix 0 3))
+                  (y (mref matrix 1 3))
+                  (z (mref matrix 2 3)))
+              (dotimes (i 3)
+                (setf (mref inverse i 3) (- (+ (* x (mref inverse i 0))
+                                               (* y (mref inverse i 1))
+                                               (* z (mref inverse i 2)))))))
+            ;; affine bottom row (0 0 0 1)
+            (setf (mref inverse 3 3) 1.0)
+            inverse)
+          (generic-inverse-matrix matrix))))
 
 (defun submatrix-determinant (matrix)
   "Determinant of the upper left 3x3 submatrix of MATRIX."

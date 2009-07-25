@@ -27,7 +27,7 @@
    #:cross-product #:%cross-product
    #:dot-product
    #:hadamard-product #:%hadamard-product
-   #:identity-matrix
+   #:identity-matrix #:+identity-matrix+
    #:inverse-matrix
    #:matrix
    #:matrix*
