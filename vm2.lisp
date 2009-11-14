@@ -167,8 +167,8 @@ interpolation factor, store result in VEC RESULT. Return RESULT. Unsafe."
       (dim 2))
     result))
 
-(define-vm-fun %%vec-lerp/1 (a b d) (%vec-lerp a a b f))
-(define-vm-fun %%vec-lerp/2 (a b d) (%vec-lerp b a b f))
+(define-vm-fun %%vec-lerp/1 (a b f) (%vec-lerp a a b f))
+(define-vm-fun %%vec-lerp/2 (a b f) (%vec-lerp b a b f))
 
 ;;;; TRANSFORMING A VECTOR -- either as a point or a direction
 

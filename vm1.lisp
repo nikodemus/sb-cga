@@ -20,14 +20,14 @@
 
 ;;;; VOPs for operations on VECs
 ;;;;
-;;;; %FOO always has the result as the first argument, but. the result
+;;;; %FOO always has the result as the first argument, but the result
 ;;;; argument itself is not an operand.
 ;;;;
 ;;;; %FOO/1 is the same operation as %FOO, but with one less argument: the
-;;;; _first_ argument both receives the result, and is use as an operand.
+;;;; _first_ argument both receives the result, and is used as an operand.
 ;;;;
 ;;;; %FOO/2 is the same operation as %FOO, but with one less argument: the
-;;;; _second_ argument both receives the result, and is use as an operand.
+;;;; _second_ argument both receives the result, and is used as an operand.
 ;;;;
 ;;;; Not everything has a %FOO/1 or %FOO/2 version.
 
