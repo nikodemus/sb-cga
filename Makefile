@@ -3,7 +3,7 @@ VERSION ?= dev
 .PHONY: clean wc
 
 clean:
-	rm -f *~ *.fasl
+	rm -f *.fasl */*.fasl *~ \#*
 
 wc:
 	wc -l *.lisp *.asd
