@@ -26,6 +26,7 @@
 	them as part of the interface!
 ******* DONE ADJUST-VEC
 ******* TODO Implement VEC-MIN/MAX using MINPS/MAXPS.
+******* TODO Tests for these
 ***** DONE Predicates
 ******* DONE Tests
 ******* DONE VECP
@@ -71,7 +72,8 @@
 ***** DONE MAKE-IDENTIY-MATRIX
 ***** DONE MATRIX=
 
+*** DONE Compiler macros to transform nested operations for less consing.
+*** TODO Consider bang-style public API
 * Version 2.0
 *** TODO Separate transform type, used double-floats in matrices.
-*** TODO Compiler macros to transform nested operations for less consing.
 *** TODO Variable arity in vector arithmetic without memory traffic for intermediate results
