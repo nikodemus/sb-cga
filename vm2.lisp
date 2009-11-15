@@ -231,6 +231,7 @@ Store result in RESULT, and return it."
 ;;;; argument is both an operand an a place to store the result.
 
 (defvar *optimizable-funs* nil)
+(defvar *alloc-funs* nil)
 
 (defun optimize-vec-allocation (form)
   ;; If the first or second argument is known to return a freshly
@@ -241,7 +242,9 @@ Store result in RESULT, and return it."
   ;;
   (flet ((opt-arg-p (arg)
            (and (consp arg)
-                (assoc (car arg) *optimizable-funs* :test #'eq))))
+                (let ((op (car arg)))
+                  (or (member op *alloc-funs* :test #'eq)
+                      (assoc op *optimizable-funs* :test #'eq))))))
     (destructuring-bind (name/1 name/2)
         (cdr (assoc (car form) *optimizable-funs* :test #'eq))
       (let ((res (if name/2

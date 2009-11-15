@@ -45,17 +45,22 @@
          (declare (ignore ,@lambda-list))
          (optimize-vec-allocation ,form)))))
 
+(defmacro define-alloc-fun (name lambda-list &body body)
+  `(progn
+     (eval-when (:compile-toplevel :load-toplevel)
+       (pushnew ',name *alloc-funs*))
+     (declaim (inline ,name))
+     (defun ,name ,lambda-list ,@body)))
+
 ;;;; CONSTRUCTORS
 
-(declaim (ftype (sfunction () vec) alloc-vec)
-         (inline alloc-vec))
-(defun alloc-vec ()
+(declaim (ftype (sfunction () vec) alloc-vec))
+(define-alloc-fun alloc-vec ()
   "Allocate a zero-initialized VEC."
   (make-array 3 :element-type 'single-float))
 
-(declaim (ftype (sfunction (single-float single-float single-float) vec) vec)
-         (inline vec))
-(defun vec (a b c)
+(declaim (ftype (sfunction (single-float single-float single-float) vec) vec))
+(define-alloc-fun vec (a b c)
   "Allocate 3D vector [A, B, C]."
   (make-array 3 :element-type 'single-float :initial-contents (list a b c)))
 
@@ -178,9 +183,8 @@ VEC."
           (aref result 2) (- (* a1 b2) (* a2 b1)))
     result))
 
-(declaim (ftype (sfunction (vec vec) vec) cross-product)
-         (inline cross-product))
-(defun cross-product (a b)
+(declaim (ftype (sfunction (vec vec) vec) cross-product))
+(define-alloc-fun cross-product (a b)
   "Cross product of 3D vector A and 3D vector B, return result as a freshly
 allocated VEC."
   (declare (optimize speed))
