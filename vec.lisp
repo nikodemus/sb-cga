@@ -18,7 +18,7 @@
 
 (in-package :sb-cga)
 
-(defmacro define-opt-fun (name lambda-list doc)
+(defmacro define-opt-fun (name lambda-list doc &key no-compiler-macro)
   (let ((vm/1-name (symbolicate "%%" name "/1"))
         (vm-name (symbolicate "%" name))
         (form (gensym "FORM")))
@@ -27,9 +27,10 @@
          (note-optimizable-fun ',name ',vm/1-name))
        (declaim (inline ,name))
        (defun ,name ,lambda-list ,doc (,vm-name (alloc-vec) ,@lambda-list))
-       (define-compiler-macro ,name (&whole ,form ,@lambda-list)
-         (declare (ignore ,@lambda-list))
-         (optimize-vec-allocation ,form)))))
+       ,@(unless no-compiler-macro
+                 `((define-compiler-macro ,name (&whole ,form ,@lambda-list)
+                     (declare (ignore ,@lambda-list))
+                     (optimize-vec-allocation ,form)))))))
 
 (defmacro define-opt-fun2 (name lambda-list doc)
   (let ((vm/1-name (symbolicate "%%" name "/1"))
@@ -114,7 +115,20 @@ return result as a freshly allocated VEC.")
 
 (declaim (ftype (sfunction (vec) vec)))
 (define-opt-fun normalize (a)
-  "Normalize VEC A, return result as a freshly allocated VEC.")
+  "Normalize VEC A, return result as a freshly allocated VEC."
+  :no-compiler-macro t)
+(define-compiler-macro normalize (&whole form a)
+  (if (consp a)
+      (let ((op (car a))
+            (args (cdr a)))
+        (case op
+          (vec
+           `(%%normalized-vec (alloc-vec) ,@args))
+          (cross-product
+           `(%normalized-cross-product (alloc-vec) ,@args))
+          (otherwise
+           (optimize-vec-allocation form))))
+      form))
 
 (declaim (ftype (sfunction (vec vec single-float) vec) vec-lerp))
 (define-opt-fun2 vec-lerp (a b f)
@@ -181,6 +195,19 @@ VEC."
     (setf (aref result 0) (- (* a2 b3) (* a3 b2))
           (aref result 1) (- (* a3 b1) (* a1 b3))
           (aref result 2) (- (* a1 b2) (* a2 b1)))
+    result))
+
+(defun %normalized-cross-product (result a b)
+  (let ((a1 (aref a 0))
+        (a2 (aref a 1))
+        (a3 (aref a 2))
+        (b1 (aref b 0))
+        (b2 (aref b 1))
+        (b3 (aref b 2)))
+    (%%normalized-vec result
+                      (- (* a2 b3) (* a3 b2))
+                      (- (* a3 b1) (* a1 b3))
+                      (- (* a1 b2) (* a2 b1)))
     result))
 
 (declaim (ftype (sfunction (vec vec) vec) cross-product))

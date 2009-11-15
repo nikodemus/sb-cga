@@ -18,8 +18,8 @@
 *** TODO VEC
 ***** DONE VEC type
 ***** TODO Additional operations
-******* TODO NORMALIZED-VEC
-******* TODO NORMALIZED-CROSS-PRODUCT
+******* DONE NORMALIZED-VEC
+******* DONE NORMALIZED-CROSS-PRODUCT
 ******* TODO NORMALIZED-TRANSFORM-POINT
 	The reason these seem worthwhile is that they avoid memory
 	traffic -- but it is probably not a good idea to expose

@@ -340,9 +340,13 @@
 
 ;;;; CROSS PRODUCT
 ;;;;
-;;;; No VOP, just the defknown.
+;;;; No VOP, just the defknowns.
 
 (defknown %cross-product (vec vec vec) vec
+    (any)
+  :result-arg 0)
+
+(defknown %normalized-cross-product (vec vec vec) vec
     (any)
   :result-arg 0)
 
@@ -504,6 +508,45 @@
     (inst movss (ea-for-data vector 0) tmp4)
     (inst movss (ea-for-data vector 1) tmp5)
     (inst movss (ea-for-data vector 2) tmp6)
+    (move result vector)))
+
+(defknown %%normalized-vec (vec single-float single-float single-float) vec
+    (any #+sb-cga-sse2 always-translatable)
+  :result-arg 0)
+
+#+sb-cga-sse2
+(define-vop (%%normalized-vec)
+  (:translate %%normalized-vec)
+  (:policy :fast-safe)
+  (:args (vector :scs (descriptor-reg) :target result)
+         (x :scs (single-reg))
+         (y :scs (single-reg))
+         (z :scs (single-reg)))
+  (:arg-types t single-float single-float single-float)
+  (:results (result :scs (descriptor-reg)))
+  (:temporary (:sc single-reg) a)
+  (:temporary (:sc single-reg) b)
+  (:temporary (:sc single-reg) c)
+  (:generator 10
+    (inst movss a x)
+    (inst movss b y)
+    (inst movss c z)
+    ;; Compute the length into X
+    (inst mulss x x)
+    (inst mulss y y)
+    (inst mulss z z)
+    (inst addss x y)
+    (inst addss x z)
+    (inst rsqrtss x x)
+    ;; Divide original -- is this faster then loading again and
+    ;; using MULPS?
+    (inst mulss a x)
+    (inst mulss b x)
+    (inst mulss c x)
+    ;; Store result
+    (inst movss (ea-for-data vector 0) a)
+    (inst movss (ea-for-data vector 1) b)
+    (inst movss (ea-for-data vector 2) c)
     (move result vector)))
 
 ;;;; LINEAR INTERPOLATION
