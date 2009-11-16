@@ -4,7 +4,28 @@
 #+STARTUP: oddeven
 
 * Version 1.0
-
+*** TODO Porting
+    Who woulda thunk people want to port this?
+***** Guidelines & Principles
+******* No #+sbcl #-sbcl in source files that exist for other reasons than portability.
+******* Nikodemus will not maintain portability: SBCL port will be the canonical one.
+******* Uglified code is allowed in shared files if it makes things faster for SBCL.
+******* Uglified code is not allowed in shared if it makes code faster for implementation X.
+	(Put it in an implementation specific file instead.)
+***** TODO add port-sbcl.lisp
+      This fill will define SB-CGA::DEFKNOWN as an empty wrapper around SB-C:DEFKNOWN, etc.
+***** TODO add port-<other-impl>.lisp
+      These files will define appropriate versions of SB-CGA::DEFKNOWN, etc.
+***** TODO restructure vm1.lisp & vm2.lisp for portability
+      Probably add vm-<impl>.lisp which should contain the DEFINE-VOP
+      equivalents, so that the load-order would be something like
+      fndb.lisp (defknowns for the whole system), vm-<impl>.lisp
+      (define-vop equivalents for ports that have them),
+      vm-common.lisp (stuff in vm2.lisp, mostly).
+***** TODO Switch to plain RT or another test framework.
+***** TODO Rename to CL-CGA, maybe
+      Iff there are at least two ports with maintainers that use them
+      and will probably continue to do so.
 *** DONE Defsystem
 *** DONE Defpackage
 *** TODO Manual
