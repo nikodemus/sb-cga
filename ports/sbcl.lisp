@@ -16,18 +16,8 @@
 ;;;; TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ;;;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-(defsystem :sb-cga
-  :description "Computer graphic algebra for SBCL."
-  :serial t
-  :components
-  ((:file "package")
-   (:module "ports"
-            :if-component-dep-fails :try-next
-            :components ((:file "sbcl" :in-order-to ((compile-op (feature :sbcl))))
-                         (:file "ccl" :in-order-to ((compile-op (feature :ccl))))))
-   (:file "types")
-   (:file "vm1")
-   (:file "vm2")
-   (:file "vec")
-   (:file "matrix")
-   (:file "roots")))
+(in-package :sb-cga)
+
+#-sbcl
+(error "This file is SBCL only!")
+
