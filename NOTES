@@ -30,11 +30,20 @@
 *** DONE Defsystem
 *** DONE Defpackage
 *** TODO Manual
+***** TODO Format & docstring extraction.
+***** TODO Writing
+******* TODO Overview
+       	What SB-CGA is and isn't. What sort of things may change if you use
+       	the repo directly. Design choises relating to single/double floats.
+******* TODO Vectors
+******* TODO Matrices
+******* TODO Root solvers
+******* TODO Constants
 *** TODO Miscellany
 ***** DONE QUADRATIC-ROOTS-ABOVE
 ***** DONE QUADRATIC-ROOTS
-***** TODO CUBIC-ROOTS-ABOVE
-***** TODO CUBIC-ROOTS
+***** DONE CUBIC-ROOTS-ABOVE
+***** DONE CUBIC-ROOTS
 ***** TODO QUADRIC-ROOTS-ABOVE
 ***** TODO QUADRIC-ROOTS
 *** TODO VEC

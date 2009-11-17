@@ -474,3 +474,49 @@
                                                  (mapcar #'eval args1)))))))))))
       problems)
   nil)
+
+(defun map-coefficients (fun n start stop &optional (step 1))
+  (labels ((rec (n coeffs)
+             (if (zerop n)
+                 ;; No degenerate cases for now.
+                 (unless (zerop (car coeffs))
+                   (apply fun coeffs))
+                 (loop for c from start upto stop by step
+                       do (rec (1- n) (cons c coeffs))))))
+    (rec n nil)))
+
+(deftest cubic-roots.1
+    (let ((n 0))
+      (map-coefficients
+       (lambda (a b c d)
+         (let ((roots (multiple-value-list (cubic-roots a b c d))))
+           (dolist (x roots)
+             (unless (sb-ext:float-nan-p x)
+               (incf n)
+               (let ((res (+ (* a (expt x 3)) (* b (expt x 2)) (* c x) d)))
+                 (unless (< -0.001 res 0.001)
+                   (error "cubic ~S ~S ~S ~S => ~S : ~S, ~S"
+                          a b c d
+                          roots
+                          x res)))))))
+       4 -10.0 10.0 1.0)
+      n)
+  262232)
+
+(deftest cubic-roots-above.1
+    (let ((n 0))
+      (map-coefficients
+       (lambda (a b c d)
+         (let ((roots (multiple-value-list (cubic-roots-above 0.0 a b c d))))
+           (dolist (x roots)
+             (when (> x 0.0)
+               (incf n)
+               (let ((res (+ (* a (expt x 3)) (* b (expt x 2)) (* c x) d)))
+                 (unless (< -0.001 res 0.001)
+                   (error "cubic/above ~S ~S ~S ~S) => ~S : ~S, ~S"
+                          a b c d
+                          roots
+                          x res)))))))
+       4 -10.0 10.0 1.0)
+      n)
+  132492)

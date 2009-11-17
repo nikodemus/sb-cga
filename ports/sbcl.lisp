@@ -21,6 +21,11 @@
 #-sbcl
 (error "This file is SBCL only!")
 
+;;;; Misc bits.
+
+(declaim (inline cbrt))
+(sb-alien:define-alien-routine cbrt sb-alien:double (double sb-alien:double))
+
 ;;;; :SB-CGA-SSE2 tells vm.lisp if it should use the Lisp versions of various
 ;;;; functions.
 #+x86-64
@@ -37,6 +42,8 @@
     `(sb-c:define-vop ,name/inherits
        ,@(subst 'sb-vm::descriptor-reg 'descriptor-reg
                 (subst 'sb-vm::single-reg 'single-reg body)))))
+
+;;;; Utilities for writing VOPs
 
 #+sb-cga-sse2
 (progn

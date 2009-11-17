@@ -39,6 +39,8 @@
    #:normalize #:%normalize
    #:quadratic-roots
    #:quadratic-roots-above
+   #:cubic-roots
+   #:cubic-roots-above
    #:reorient
    #:rotate #:rotate*
    #:rotate-around
