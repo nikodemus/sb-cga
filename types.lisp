@@ -18,11 +18,27 @@
 
 (in-package :sb-cga)
 
+;;; Similar to FUNCTION, but the result type is "exactly" specified: if it is
+;;; an object type, then the function returns exactly one value, if it is a
+;;; short form of VALUES, then this short form specifies the exact number of
+;;; values.
+(deftype sfunction (args &optional result)
+  (let ((result (cond ((eq result '*) '*)
+                      ((or (atom result)
+                           (not (eq (car result) 'values)))
+                       `(values ,result &optional))
+                      ((intersection (cdr result) lambda-list-keywords)
+                       result)
+                      (t `(values ,@(cdr result) &optional)))))
+    `(function ,args ,result)))
+
+;;; VECTOR TYPE
+
 (deftype vec ()
   "A 3D vector of single floats."
   `(simple-array single-float (3)))
 
-;;; MATRIX TYPE, PREDICATES, and CONSTRUCTORS
+;;; MATRIX TYPE
 
 (deftype matrix ()
   "4x4 matrix of single floats, represented as a one-dimensional vector stored

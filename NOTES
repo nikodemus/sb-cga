@@ -12,11 +12,12 @@
 ******* Uglified code is allowed in shared files if it makes things faster for SBCL.
 ******* Uglified code is not allowed in shared if it makes code faster for implementation X.
 	(Put it in an implementation specific file instead.)
-***** TODO add port-sbcl.lisp
-      This fill will define SB-CGA::DEFKNOWN as an empty wrapper around SB-C:DEFKNOWN, etc.
-***** TODO add port-<other-impl>.lisp
+***** DONE add ports/sbcl.lisp
+******* DONE Add file to build with feature dep.
+******* DONE define SB-CGA::DEFKNOWN as an empty wrapper around SB-C:DEFKNOWN, etc.
+***** DONE add ports/<other-impl>.lisp
       These files will define appropriate versions of SB-CGA::DEFKNOWN, etc.
-***** TODO restructure vm1.lisp & vm2.lisp for portability
+***** DONE restructure vm1.lisp & vm2.lisp for portability
       Probably add vm-<impl>.lisp which should contain the DEFINE-VOP
       equivalents, so that the load-order would be something like
       fndb.lisp (defknowns for the whole system), vm-<impl>.lisp

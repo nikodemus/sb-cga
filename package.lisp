@@ -62,10 +62,5 @@
    #:vec~
    #:zero-matrix
    )
-  (:use :cl :sb-int :sb-c)
-  (:import-from :sb-vm
-                #:inst
-                #:descriptor-reg
-                #:single-reg
-                )
+  (:use :cl :alexandria)
   (:lock t))

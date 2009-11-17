@@ -18,16 +18,17 @@
 
 (defsystem :sb-cga
   :description "Computer graphic algebra for SBCL."
+  :depends-on (:alexandria)
   :serial t
   :components
   ((:file "package")
+   (:file "types")
+   (:file "fndb")
    (:module "ports"
             :if-component-dep-fails :try-next
             :components ((:file "sbcl" :in-order-to ((compile-op (feature :sbcl))))
                          (:file "ccl" :in-order-to ((compile-op (feature :ccl))))))
-   (:file "types")
-   (:file "vm1")
-   (:file "vm2")
+   (:file "vm")
    (:file "vec")
    (:file "matrix")
    (:file "roots")))
