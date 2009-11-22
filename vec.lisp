@@ -86,7 +86,7 @@
 (define-opt-fun2 vec- (a b)
   "Substract VEC B from VEC A, return result as a freshly allocated VEC.")
 
-(declaim (ftype (sfunction (vec single-float)) vec*))
+(declaim (ftype (sfunction (vec single-float) vec) vec*))
 (define-opt-fun vec* (a f)
   "Multiply VEC A with single-float F, return result as a freshly allocated
 VEC.")

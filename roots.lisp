@@ -18,6 +18,12 @@
 
 (in-package :sb-cga)
 
+(defconstant +eqn-eps+ 1d-9)
+
+(declaim (inline is-zero))
+(defun is-zero (x)
+  (~ 0.0d0 x +eqn-eps+))
+
 ;;;; QUADRATIC ROOTS
 
 (declaim (ftype (function (single-float single-float single-float single-float)
