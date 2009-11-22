@@ -16,9 +16,30 @@
 ;;;; TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ;;;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+;;; unoptimized CCL port
+;;;
+
 (in-package :sb-cga)
 
 #-ccl
 (error "This file is CCL only!")
 
-(error "CCL port not complete.")
+(deftype sfunction (args ret)
+  (declare (ignorable args ret))
+  `(function ,(if (listp args) args (list args))
+             ,(if (listp ret) ret `(values ,ret &optional))))
+
+(defun single-float-quiet-nan () 1f+-0)
+(defun double-float-quiet-nan () 1d+-0)
+
+(defun float-nan-p (x)
+  (and (ccl::nan-or-infinity-p x)
+       (not (ccl::infinity-p x))))
+
+(declaim (inline cbrt))
+(defun cbrt (float)
+  "Cube root of FLOAT."
+  ;; this should probably use FFI like the sbcl version...
+  (if (minusp float)
+      (- (expt (- float) 1/3))
+      (expt float 1/3)))
