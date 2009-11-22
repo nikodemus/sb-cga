@@ -20,7 +20,7 @@
 
 (defmacro define-vm-fun (name lambda-list &body generic-body)
   (multiple-value-bind (forms declarations doc)
-      (sb-int:parse-body generic-body :doc-string-allowed t)
+      (alexandria:parse-body generic-body :documentation t)
     (declare (ignorable forms))
     ;; Out-of-line wrappers for SSE2 versions, and pure lisp versions
     ;; for SSE2-less platforms.
@@ -33,7 +33,8 @@
        (defun ,name ,lambda-list
          ,@(when doc (list doc))
          ,@declarations
-         (declare (optimize (speed 3) (safety 1) (debug 1) (sb-c::recognize-self-calls 0)))
+         (declare (optimize (speed 3) (safety 1) (debug 1)
+                            #+sbcl(sb-c::recognize-self-calls 0)))
          #+sb-cga-sse2
          (,name ,@lambda-list)
          #-sb-cga-sse2

@@ -349,7 +349,7 @@ element of A is ignored."
 
 (eval-when (:compile-toplevel)
   ;; The next baby wants this
-  (setf sb-ext:*inline-expansion-limit* 1000))
+  #+sbcl(setf sb-ext:*inline-expansion-limit* 1000))
 
 (defun generic-inverse-matrix (matrix)
   (let ((det (matrix-determinant matrix)))
