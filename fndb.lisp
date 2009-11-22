@@ -31,7 +31,10 @@
          ,(mapcar (lambda (attr)
                     (intern (symbol-name attr) :sb-c))
                   attributes)
-       ,@keys)))
+       ,@keys))
+  #-sbcl
+  (defmacro defknown (name arg-types ret-type attributes &rest keys)
+    `(declaim (ftype (function ,arg-types ,ret-type) ,name))))
 
 ;;;; VOPs for operations on VECs
 ;;;;
