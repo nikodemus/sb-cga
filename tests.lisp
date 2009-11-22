@@ -491,7 +491,7 @@
        (lambda (a b c d)
          (let ((roots (multiple-value-list (cubic-roots a b c d))))
            (dolist (x roots)
-             (unless (sb-ext:float-nan-p x)
+             (unless (sb-cga::float-nan-p x)
                (incf n)
                (let ((res (+ (* a (expt x 3)) (* b (expt x 2)) (* c x) d)))
                  (unless (< -0.001 res 0.001)

@@ -61,10 +61,9 @@ value, and the other as the secondary. In case of a double root both the
 primary and secondary values are the same. NaN indicates lack of a real-valued
 root."
   (declare (optimize speed))
-  (let ((d (- (* b b) (* 4.0 a c)))
-        (nan (/ 0.0 0.0)))
+  (let ((d (- (* b b) (* 4.0 a c))))
     (if (< d 0.0)
-        (values nan nan)
+        (values (single-float-quiet-nan) (single-float-quiet-nan))
         (let* ((sqrt-d (sqrt d))
                (1/2a (/ 1.0 (+ a a)))
                (-b (- b))
@@ -129,9 +128,8 @@ real-valued root."
   ;; the solution otherwise.
   ;;
   ;; Normal form: x^3 +(B/A)x^2 + (C/A)x + (D/A) = 0
-  (let ((1/a (/ 1.0d0 a))
-        (nan (/ 0.0d0 0.0d0)))
-    (multiple-value-bind (x1 x2 x3) (%cubic-roots/normal (* b 1/a) (* c 1/a) (* d 1/a) nan)
+  (let ((1/a (/ 1.0d0 a)))
+    (multiple-value-bind (x1 x2 x3) (%cubic-roots/normal (* b 1/a) (* c 1/a) (* d 1/a) (double-float-quiet-nan))
       (values (coerce x1 'single-float)
               (coerce x2 'single-float)
               (coerce x3 'single-float)))))

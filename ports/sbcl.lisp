@@ -26,6 +26,18 @@
 (declaim (inline cbrt))
 (sb-alien:define-alien-routine cbrt sb-alien:double (double sb-alien:double))
 
+(defun single-float-quiet-nan ()
+  ;; compiler has problems with literal NaNs, so make sure it doesn't get
+  ;; evaluated until runtime
+  (declare (notinline sb-kernel:make-single-float))
+  (sb-kernel:make-single-float -1))
+(defun double-float-quiet-nan ()
+  (declare (notinline sb-kernel:make-double-float))
+  (sb-kernel:make-double-float -1 0))
+
+(defun float-nan-p (x)
+  (sb-ext:float-nan-p x))
+
 ;;;; :SB-CGA-SSE2 tells vm.lisp if it should use the Lisp versions of various
 ;;;; functions.
 #+x86-64
