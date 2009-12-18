@@ -26,15 +26,15 @@
 (declaim (inline cbrt))
 (sb-alien:define-alien-routine cbrt sb-alien:double (double sb-alien:double))
 
+(declaim (inline single-float-quiet-nan))
 (defun single-float-quiet-nan ()
-  ;; compiler has problems with literal NaNs, so make sure it doesn't get
-  ;; evaluated until runtime
-  (declare (notinline sb-kernel:make-single-float))
-  (sb-kernel:make-single-float -1))
-(defun double-float-quiet-nan ()
-  (declare (notinline sb-kernel:make-double-float))
-  (sb-kernel:make-double-float -1 0))
+  (sb-kernel:make-single-float #x-400000))
 
+(declaim (inline double-float-quiet-nan))
+(defun double-float-quiet-nan ()
+  (sb-kernel:make-double-float #x-80000 0))
+
+(declaim (inline float-nan-p))
 (defun float-nan-p (x)
   (sb-ext:float-nan-p x))
 

@@ -428,7 +428,8 @@
           (v-ops '(normalize copy-vec))
           (vv-ops '(hadamard-product vec- vec+))
           (vf-ops '(vec/ vec*))
-          #+sbcl(sb-ext:*evaluator-mode* :interpret)
+          #+sbcl
+          (sb-ext:*evaluator-mode* :interpret)
           (problems nil))
       (labels ((r () (- (random 10.0) 5.0))
                (vr () `(vec ,(r) ,(r) ,(r)))

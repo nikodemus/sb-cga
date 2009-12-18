@@ -347,9 +347,10 @@ element of A is ignored."
        (* (a 1 4) (a 2 2) (a 3 3) (a 4 1))
        (* (a 1 4) (a 2 3) (a 3 1) (a 4 2)))))
 
+;;; KLUDGE: Default is too low to do a good job with GENERIC-INVERSE-MATRIX.
+#+sbcl
 (eval-when (:compile-toplevel)
-  ;; The next baby wants this
-  #+sbcl(setf sb-ext:*inline-expansion-limit* 1000))
+  (setf sb-ext:*inline-expansion-limit* 1000))
 
 (defun generic-inverse-matrix (matrix)
   (let ((det (matrix-determinant matrix)))

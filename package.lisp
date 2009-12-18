@@ -65,4 +65,5 @@
    #:zero-matrix
    )
   (:use :cl :alexandria)
-  #+sbcl(:lock t))
+  #+sb-package-locks
+  (:lock t))

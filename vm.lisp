@@ -34,7 +34,8 @@
          ,@(when doc (list doc))
          ,@declarations
          (declare (optimize (speed 3) (safety 1) (debug 1)
-                            #+sbcl(sb-c::recognize-self-calls 0)))
+                            #+sb-cga-sse2
+                            (sb-c::recognize-self-calls 0)))
          #+sb-cga-sse2
          (,name ,@lambda-list)
          #-sb-cga-sse2
