@@ -64,6 +64,7 @@
    #:vec~
    #:zero-matrix
    )
-  (:use :cl :alexandria)
+  (:use :cl)
+  (:import-from :alexandria #:symbolicate)
   #+sb-package-locks
   (:lock t))
