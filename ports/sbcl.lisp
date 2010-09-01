@@ -21,6 +21,9 @@
 #-sbcl
 (error "This file is SBCL only!")
 
+(eval-when (:compile-toplevel :load-toplevel)
+  (sb-int:set-floating-point-modes :traps nil))
+
 ;;;; Misc bits.
 
 (declaim (inline cbrt))
