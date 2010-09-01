@@ -80,18 +80,20 @@ EPSILON defaults to +DEFAULT-EPSILON+"
                            matrix)
                 matrix)
          (inline matrix))
-(defun matrix (m11 m12 m13 m14
-               m21 m22 m23 m24
-               m31 m32 m33 m34
-               m41 m42 m43 m44)
-  "Construct MATRIX with the given elements (arguments are provided in row
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun matrix (m11 m12 m13 m14
+                 m21 m22 m23 m24
+                 m31 m32 m33 m34
+                 m41 m42 m43 m44)
+    "Construct MATRIX with the given elements (arguments are provided in row
 major order.)"
-  (make-array 16
-              :element-type 'single-float
-              :initial-contents (list m11 m21 m31 m41
-                                      m12 m22 m32 m42
-                                      m13 m23 m33 m43
-                                      m14 m24 m34 m44)))
+    (make-array 16
+                :element-type 'single-float
+                :initial-contents (list m11 m21 m31 m41
+                                        m12 m22 m32 m42
+                                        m13 m23 m33 m43
+                                        m14 m24 m34 m44))))
 
 (declaim (ftype (sfunction () matrix) zero-matrix)
          (inline zero-matrix))
