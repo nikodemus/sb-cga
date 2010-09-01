@@ -24,11 +24,6 @@
 #-ccl
 (error "This file is CCL only!")
 
-(deftype sfunction (args ret)
-  (declare (ignorable args ret))
-  `(function ,(if (listp args) args (list args))
-             ,(if (listp ret) ret `(values ,ret &optional))))
-
 (defun single-float-quiet-nan () 1f+-0)
 (defun double-float-quiet-nan () 1d+-0)
 
