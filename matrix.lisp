@@ -122,27 +122,35 @@ major order.)"
 (defun matrix* (&rest matrices)
   "Multiply MATRICES. The result might not be freshly allocated if all,
 or all but one multiplicant is an identity matrix."
-  (labels ((mul (left more)
-             (if more
-                 (if (eq left +identity-matrix+)
-                     (mul (pop more) more)
-                     (let ((right (pop more)))
-                       (if (eq +identity-matrix+ right)
-                           (mul left more)
-                           (let ((result (zero-matrix)))
-                             (dotimes (i 4)
-                               (dotimes (j 4)
-                                 (setf (mref result i j)
-                                       (loop for k below 4
-                                             summing (* (mref left i k) (mref right k j))))))
-                             (mul result more)))))
-                 left)))
-    (cond ((not matrices)
-           +identity-matrix+)
-          ((cdr matrices)
-           (mul (car matrices) (cdr matrices)))
-          (t
-           (car matrices)))))
+  (macrolet ((inline-mul (left right dest)
+               `(progn
+                  ,@(loop for i below 4
+                       append (loop for j below 4
+                            collect
+                              `(setf
+                                (mref ,dest ,i ,j)
+                                (+ ,@(loop for k below 4
+                                        collect `(* (mref ,left ,i ,k) (mref ,right ,k ,j))))))))))
+   (labels ((mul (left more)
+              (declare (matrix left))
+              (if more
+                  (if (eq left +identity-matrix+)
+                      (mul (pop more) more)
+                      (let ((right (pop more)))
+                        (declare (matrix right))
+                        (if (eq +identity-matrix+ right)
+                            (mul left more)
+                            (let ((result (zero-matrix)))
+                              (declare (matrix result))
+                              (inline-mul left right result)
+                              (mul result more)))))
+                  left)))
+     (cond ((not matrices)
+            +identity-matrix+)
+           ((cdr matrices)
+            (mul (car matrices) (cdr matrices)))
+           (t
+            (car matrices))))))
 
 ;;;; TRANSFORMATIONS
 
