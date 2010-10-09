@@ -26,8 +26,20 @@
 
 ;;;; Misc bits.
 
+(declaim (inline cbrt/single))
+(sb-alien:define-alien-routine ("cbrtf" cbrt/single) float (float float))
+
+(declaim (inline cbrt/double))
+(sb-alien:define-alien-routine ("cbrt" cbrt/double) sb-alien:double (double sb-alien:double))
+
 (declaim (inline cbrt))
-(sb-alien:define-alien-routine cbrt sb-alien:double (double sb-alien:double))
+(defun cbrt (float)
+  "Cube root of FLOAT."
+  (etypecase float
+    (single-float
+     (cbrt/single float))
+    (double-float
+     (cbrt/double float))))
 
 (declaim (inline single-float-quiet-nan))
 (defun single-float-quiet-nan ()

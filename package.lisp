@@ -23,6 +23,7 @@
    #:+default-epsilon+
    #:alloc-vec
    #:adjust-vec #:%adjust-vec
+   #:cbrt
    #:copy-vec #:%copy-vec
    #:cross-product #:%cross-product
    #:dot-product

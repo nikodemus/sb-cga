@@ -26,23 +26,11 @@
 
 (in-package :sb-cga)
 
-(sb-alien:define-alien-routine ("cbrtf" cbrt/single) float (float float))
-(sb-alien:define-alien-routine ("cbrt" cbrt/double) sb-alien:double (double sb-alien:double))
-
 (defconstant +eqn-eps+ 1d-9)
 
 (declaim (inline is-zero))
 (defun is-zero (x)
   (~ 0.0d0 x +eqn-eps+))
-
-(declaim (inline cbrt))
-(defun cbrt (float)
-  "Cube root of FLOAT."
-  (etypecase float
-    (single-float
-     (cbrt/single float))
-    (double-float
-     (cbrt/double float))))
 
 (declaim (inline make-roots))
 (defun make-roots (n)
