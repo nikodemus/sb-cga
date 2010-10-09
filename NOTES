@@ -23,6 +23,10 @@
       fndb.lisp (defknowns for the whole system), vm-<impl>.lisp
       (define-vop equivalents for ports that have them),
       vm-common.lisp (stuff in vm2.lisp, mostly).
+***** TODO Generic port.
+      Looking at ccl.lisp, aside from the NaN issues a generic port should not
+      be too hard. To work around the unportability of NaN a generic port could maybe
+      use NIL for NaN and most-positive/negative-single-float for infinities.
 ***** TODO Switch to plain RT or another test framework.
 ***** TODO Rename to CL-CGA, maybe
       Iff there are at least two ports with maintainers that use them
