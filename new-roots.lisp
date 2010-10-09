@@ -37,10 +37,7 @@
   (declare (fixnum n))
   (make-array n :element-type 'double-float))
 
-(defun solve-quadric (quadric &optional (roots (make-roots 2))
-                      &key (offset 0))
-  "Solve QUADRIC, returning number of real roots and storing their values in ROOTS,
-starting at OFFSET."
+(defun %solve-quadric (quadric roots offset)
   (declare (type (simple-array double-float (*)) quadric roots))
   ;; normal form: x^2 + px + q = 0
   (let* ((K (aref quadric 2))
@@ -57,6 +54,12 @@ starting at OFFSET."
              (setf (aref roots (+ offset 0)) (- sqrt-D p)
                    (aref roots (+ offset 1)) (- (- sqrt-D) p))
              (values 2 roots))))))
+
+(declaim (inline solve-quadric))
+(defun solve-quadric (quadric &optional (roots (make-roots 2)))
+  "Solve QUADRIC, returning number of real roots and storing their values in ROOTS,
+starting at OFFSET."
+  (%solve-quadric quadric roots 0))
 
 (defun solve-cubic (cubic &optional (roots (make-roots 3)))
   "Solve CUBIC, returning number of real roots and storing their values in ROOTS."
@@ -164,11 +167,11 @@ starting at OFFSET."
                  (setf (aref coeffs 0) (- z u)
                        (aref coeffs 1) (if (< q 0) (- v) v)
                        (aref coeffs 2) 1.0d0)
-                 (setf n-roots (solve-quadric coeffs roots))
+                 (setf n-roots (%solve-quadric coeffs roots 0))
                  (setf (aref coeffs 0) (+ z u)
                        (aref coeffs 1) (if (< q 0) v (- v))
                        (aref coeffs 2) 1.0d0)
-                 (incf n-roots (solve-quadric coeffs roots :offset n-roots))))))
+                 (incf n-roots (%solve-quadric coeffs roots n-roots))))))
       ;; resubstitute
       (let ((sub (* 1/4 A)))
         (dotimes (i n-roots)
