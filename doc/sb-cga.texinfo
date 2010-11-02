@@ -47,14 +47,14 @@ This documentation -- and SB-CGA itself -- is still a work in progress.
 
 @end ifnottex
 
-@include include/constant-sb-cga-plus-default-epsilon-plus.texinfo
-@include include/constant-sb-cga-plus-identity-matrix-plus.texinfo
+@chapter Overview
+
+@chapter Vectors
+
 @include include/fun-sb-cga-%adjust-vec.texinfo
 @include include/fun-sb-cga-%copy-vec.texinfo
 @include include/fun-sb-cga-%hadamard-product.texinfo
 @include include/fun-sb-cga-%normalize.texinfo
-@include include/fun-sb-cga-%transform-direction.texinfo
-@include include/fun-sb-cga-%transform-point.texinfo
 @include include/fun-sb-cga-%vec-.texinfo
 @include include/fun-sb-cga-%vec-lerp.texinfo
 @include include/fun-sb-cga-%vec-max.texinfo
@@ -64,13 +64,29 @@ This documentation -- and SB-CGA itself -- is still a work in progress.
 @include include/fun-sb-cga-%vec-star.texinfo
 @include include/fun-sb-cga-adjust-vec.texinfo
 @include include/fun-sb-cga-alloc-vec.texinfo
-@include include/fun-sb-cga-cbrt.texinfo
 @include include/fun-sb-cga-copy-vec.texinfo
 @include include/fun-sb-cga-cross-product.texinfo
-@include include/fun-sb-cga-cubic-roots-above.texinfo
-@include include/fun-sb-cga-cubic-roots.texinfo
 @include include/fun-sb-cga-dot-product.texinfo
 @include include/fun-sb-cga-hadamard-product.texinfo
+@include include/fun-sb-cga-normalize.texinfo
+@include include/fun-sb-cga-vec-.texinfo
+@include include/fun-sb-cga-vec-equals.texinfo
+@include include/fun-sb-cga-vec-length.texinfo
+@include include/fun-sb-cga-vec-lerp.texinfo
+@include include/fun-sb-cga-vec-max.texinfo
+@include include/fun-sb-cga-vec-min.texinfo
+@include include/fun-sb-cga-vec-plus.texinfo
+@include include/fun-sb-cga-vec-slash.texinfo
+@include include/fun-sb-cga-vec-star.texinfo
+@include include/fun-sb-cga-vec.texinfo
+@include include/fun-sb-cga-vec~.texinfo
+@include include/type-sb-cga-vec.texinfo
+
+@chapter Matrices
+
+@include include/constant-sb-cga-plus-identity-matrix-plus.texinfo
+@include include/fun-sb-cga-%transform-direction.texinfo
+@include include/fun-sb-cga-%transform-point.texinfo
 @include include/fun-sb-cga-identity-matrix.texinfo
 @include include/fun-sb-cga-inverse-matrix.texinfo
 @include include/fun-sb-cga-matrix-determinant.texinfo
@@ -80,9 +96,6 @@ This documentation -- and SB-CGA itself -- is still a work in progress.
 @include include/fun-sb-cga-matrixp.texinfo
 @include include/fun-sb-cga-matrix~.texinfo
 @include include/fun-sb-cga-mref.texinfo
-@include include/fun-sb-cga-normalize.texinfo
-@include include/fun-sb-cga-quadratic-roots-above.texinfo
-@include include/fun-sb-cga-quadratic-roots.texinfo
 @include include/fun-sb-cga-reorient.texinfo
 @include include/fun-sb-cga-rotate-around.texinfo
 @include include/fun-sb-cga-rotate-star.texinfo
@@ -95,19 +108,19 @@ This documentation -- and SB-CGA itself -- is still a work in progress.
 @include include/fun-sb-cga-translate-star.texinfo
 @include include/fun-sb-cga-translate.texinfo
 @include include/fun-sb-cga-transpose-matrix.texinfo
-@include include/fun-sb-cga-vec-.texinfo
-@include include/fun-sb-cga-vec-equals.texinfo
-@include include/fun-sb-cga-vec-length.texinfo
-@include include/fun-sb-cga-vec-lerp.texinfo
-@include include/fun-sb-cga-vec-max.texinfo
-@include include/fun-sb-cga-vec-min.texinfo
-@include include/fun-sb-cga-vec-plus.texinfo
-@include include/fun-sb-cga-vec-slash.texinfo
-@include include/fun-sb-cga-vec-star.texinfo
-@include include/fun-sb-cga-vec.texinfo
-@include include/fun-sb-cga-vec~.texinfo
 @include include/fun-sb-cga-zero-matrix.texinfo
 @include include/type-sb-cga-matrix.texinfo
-@include include/type-sb-cga-vec.texinfo
+
+@chapter Root Solvers
+
+@include include/fun-sb-cga-cubic-roots-above.texinfo
+@include include/fun-sb-cga-cubic-roots.texinfo
+@include include/fun-sb-cga-quadratic-roots-above.texinfo
+@include include/fun-sb-cga-quadratic-roots.texinfo
+
+@chapter Miscellany
+
+@include include/constant-sb-cga-plus-default-epsilon-plus.texinfo
+@include include/fun-sb-cga-cbrt.texinfo
 
 @bye

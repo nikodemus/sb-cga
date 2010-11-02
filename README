@@ -33,8 +33,8 @@
       and will probably continue to do so.
 *** DONE Defsystem
 *** DONE Defpackage
-*** TODO Manual
-***** TODO Format & docstring extraction.
+*** WIP Manual
+***** DONE Format & docstring extraction.
 ***** TODO Writing
 ******* TODO Overview
        	What SB-CGA is and isn't. What sort of things may change if you use
