@@ -1,0 +1,11 @@
+  .node { visibility:hidden; height: 0px; }
+  .menu { visibility:hidden; height: 0px; }
+  .chapter { background-color:#e4fffe; }
+  .section { background-color:#e4fffe; }
+  .subsection { background-color:#e4fffe; }
+  .settitle { background-color:#e4fffe; }
+  .contents { border: 2px solid black;
+              margin: 1cm 1cm 1cm 1cm;
+              padding-left: 3mm; }
+  body { padding: 2em 8em; font-family: sans-serif; }
+  h1 { padding: 1em; text-align: center; }

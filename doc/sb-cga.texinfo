@@ -1,0 +1,113 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename sb-cga.info
+@settitle sb-cga
+@c %**end of header
+
+@settitle sb-cga
+
+@c for install-info
+@dircategory Software development
+@direntry
+* sb-cga:           Computer Graphics Algebra library
+@end direntry
+
+@titlepage
+
+@title sb-cga
+@subtitle A Computer Graphics Algebra library
+
+@c The following two commands start the copyright page.
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+
+@end titlepage
+
+SB-CGA is courtesy of @url{http://sb-studio.net/, Steel Bank Studio
+Ltd} and written by @email{nikodemus@@sb-studio.net, Nikodemus Siivola}.
+
+SB-CGA is maintained in Git:
+@example
+git clone git://github.com/nikodemus/sb-cga.git
+@end example
+will get you a local copy.
+@example
+ @url{http://github.com/nikodemus/sb-cga}
+@end example
+is the GitHub project page.
+
+This documentation -- and SB-CGA itself -- is still a work in progress.
+
+@contents
+
+@ifnottex
+
+@include include/ifnottex.texinfo
+
+@end ifnottex
+
+@include include/constant-sb-cga-plus-default-epsilon-plus.texinfo
+@include include/constant-sb-cga-plus-identity-matrix-plus.texinfo
+@include include/fun-sb-cga-%adjust-vec.texinfo
+@include include/fun-sb-cga-%copy-vec.texinfo
+@include include/fun-sb-cga-%hadamard-product.texinfo
+@include include/fun-sb-cga-%normalize.texinfo
+@include include/fun-sb-cga-%transform-direction.texinfo
+@include include/fun-sb-cga-%transform-point.texinfo
+@include include/fun-sb-cga-%vec-.texinfo
+@include include/fun-sb-cga-%vec-lerp.texinfo
+@include include/fun-sb-cga-%vec-max.texinfo
+@include include/fun-sb-cga-%vec-min.texinfo
+@include include/fun-sb-cga-%vec-plus.texinfo
+@include include/fun-sb-cga-%vec-slash.texinfo
+@include include/fun-sb-cga-%vec-star.texinfo
+@include include/fun-sb-cga-adjust-vec.texinfo
+@include include/fun-sb-cga-alloc-vec.texinfo
+@include include/fun-sb-cga-cbrt.texinfo
+@include include/fun-sb-cga-copy-vec.texinfo
+@include include/fun-sb-cga-cross-product.texinfo
+@include include/fun-sb-cga-cubic-roots-above.texinfo
+@include include/fun-sb-cga-cubic-roots.texinfo
+@include include/fun-sb-cga-dot-product.texinfo
+@include include/fun-sb-cga-hadamard-product.texinfo
+@include include/fun-sb-cga-identity-matrix.texinfo
+@include include/fun-sb-cga-inverse-matrix.texinfo
+@include include/fun-sb-cga-matrix-determinant.texinfo
+@include include/fun-sb-cga-matrix-equals.texinfo
+@include include/fun-sb-cga-matrix-star.texinfo
+@include include/fun-sb-cga-matrix.texinfo
+@include include/fun-sb-cga-matrixp.texinfo
+@include include/fun-sb-cga-matrix~.texinfo
+@include include/fun-sb-cga-mref.texinfo
+@include include/fun-sb-cga-normalize.texinfo
+@include include/fun-sb-cga-quadratic-roots-above.texinfo
+@include include/fun-sb-cga-quadratic-roots.texinfo
+@include include/fun-sb-cga-reorient.texinfo
+@include include/fun-sb-cga-rotate-around.texinfo
+@include include/fun-sb-cga-rotate-star.texinfo
+@include include/fun-sb-cga-rotate.texinfo
+@include include/fun-sb-cga-scale-star.texinfo
+@include include/fun-sb-cga-scale.texinfo
+@include include/fun-sb-cga-transform-bounds.texinfo
+@include include/fun-sb-cga-transform-direction.texinfo
+@include include/fun-sb-cga-transform-point.texinfo
+@include include/fun-sb-cga-translate-star.texinfo
+@include include/fun-sb-cga-translate.texinfo
+@include include/fun-sb-cga-transpose-matrix.texinfo
+@include include/fun-sb-cga-vec-.texinfo
+@include include/fun-sb-cga-vec-equals.texinfo
+@include include/fun-sb-cga-vec-length.texinfo
+@include include/fun-sb-cga-vec-lerp.texinfo
+@include include/fun-sb-cga-vec-max.texinfo
+@include include/fun-sb-cga-vec-min.texinfo
+@include include/fun-sb-cga-vec-plus.texinfo
+@include include/fun-sb-cga-vec-slash.texinfo
+@include include/fun-sb-cga-vec-star.texinfo
+@include include/fun-sb-cga-vec.texinfo
+@include include/fun-sb-cga-vec~.texinfo
+@include include/fun-sb-cga-zero-matrix.texinfo
+@include include/type-sb-cga-matrix.texinfo
+@include include/type-sb-cga-vec.texinfo
+
+@bye
