@@ -61,9 +61,9 @@
   (make-array 3 :element-type 'single-float))
 
 (declaim (ftype (sfunction (single-float single-float single-float) vec) vec))
-(define-alloc-fun vec (a b c)
-  "Allocate 3D vector [A, B, C]."
-  (make-array 3 :element-type 'single-float :initial-contents (list a b c)))
+(define-alloc-fun vec (x y z)
+  "Allocate a 3d vector [X, Y, Z]."
+  (make-array 3 :element-type 'single-float :initial-contents (list x y z)))
 
 ;;;; COPYING
 
@@ -256,14 +256,14 @@ return result as a freshly allocated VEC.")
 
 (declaim (ftype (function (vec vec matrix) (values vec vec &optional))
                 transform-bounds))
-(defun transform-bounds (a b matrix)
-  "Transform the axis-aligned bounding box specified by its extreme corners A
-and B using MATRIX. Return new extreme corners (minimum and maximum
+(defun transform-bounds (v1 v2 matrix)
+  "Transform the axis-aligned bounding box specified by its extreme corners
+V1 and V2 using MATRIX. Return new extreme corners (minimum and maximum
 coordinates) as freshly allocted VECs, as the primary and secondary value."
   ;; Naive method: transform all corners.
   ;; See http://www.ics.uci.edu/~arvo/code/TransformingBoxes.c
   ;; for a better way.
-  (let* ((min (transform-point a matrix))
+  (let* ((min (transform-point v1 matrix))
          (max (copy-vec min)))
     (flet ((tran (i j k)
              (let ((tmp (vec i j k)))
@@ -271,13 +271,13 @@ coordinates) as freshly allocted VECs, as the primary and secondary value."
                (%%transform-point/1 tmp matrix)
                (%vec-min min min tmp)
                (%vec-max max max tmp))))
-      (tran (aref a 0) (aref a 1) (aref b 2))
-      (tran (aref a 0) (aref b 1) (aref a 2))
-      (tran (aref a 0) (aref b 1) (aref b 2))
-      (tran (aref b 0) (aref a 1) (aref a 2))
-      (tran (aref b 0) (aref a 1) (aref b 2))
-      (tran (aref b 0) (aref b 1) (aref a 2))
-      (tran (aref b 0) (aref b 1) (aref b 2)))
+      (tran (aref v1 0) (aref v1 1) (aref v2 2))
+      (tran (aref v1 0) (aref v2 1) (aref v1 2))
+      (tran (aref v1 0) (aref v2 1) (aref v2 2))
+      (tran (aref v2 0) (aref v1 1) (aref v1 2))
+      (tran (aref v2 0) (aref v1 1) (aref v2 2))
+      (tran (aref v2 0) (aref v2 1) (aref v1 2))
+      (tran (aref v2 0) (aref v2 1) (aref v2 2)))
     (values min max)))
 
 ;;;; HASHING

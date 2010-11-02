@@ -56,19 +56,19 @@
 ;;;; COMPARISON
 
 (declaim (ftype (sfunction (matrix matrix) boolean) matrix=))
-(defun matrix= (a b)
-  "Return true if MATRIX A is elementwise equal to MATRIX B."
+(defun matrix= (m1 m2)
+  "Return true if MATRIX M1 is elementwise equal to MATRIX M1."
   (dotimes (i 16 t)
-    (unless (= (aref a i) (aref b i))
+    (unless (= (aref m1 i) (aref m2 i))
       (return nil))))
 
 (declaim (ftype (sfunction (matrix matrix &optional single-float) boolean) matrix~))
-(defun matrix~ (a b &optional (epsilon +default-epsilon+))
-  "Return true if MATRIX A and MATRIX B are elementwise within EPSILON of each other.
+(defun matrix~ (m1 m2 &optional (epsilon +default-epsilon+))
+  "Return true if MATRIX M1 and MATRIX M2 are elementwise within EPSILON of each other.
 EPSILON defaults to +DEFAULT-EPSILON+"
   (let ((-e (- epsilon)))
     (dotimes (i 16 t)
-      (unless (<= -e (- (aref a i) (aref b i)) epsilon)
+      (unless (<= -e (- (aref m1 i) (aref m2 i)) epsilon)
         (return nil)))))
 
 ;;;; CONSTRUCTORS
@@ -219,22 +219,22 @@ rotation factors."
   (rotate* (aref vec 0) (aref vec 1) (aref vec 2)))
 
 (declaim (ftype (sfunction (vec single-float) matrix) rotate-around))
-(defun rotate-around (a radians)
-  "Construct a rotation matrix that rotates by RADIANS around VEC A. 4th
-element of A is ignored."
-  (cond ((vec= a (vec 1.0 0.0 0.0))
+(defun rotate-around (v radians)
+  "Construct a rotation matrix that rotates by RADIANS around VEC V. 4th
+element of V is ignored."
+  (cond ((vec= v (vec 1.0 0.0 0.0))
          (rotate* radians 0.0 0.0))
-        ((vec= a (vec 0.0 1.0 0.0))
+        ((vec= v (vec 0.0 1.0 0.0))
          (rotate* 0.0 radians 0.0))
-        ((vec= a (vec 0.0 0.0 1.0))
+        ((vec= v (vec 0.0 0.0 1.0))
          (rotate* 0.0 0.0 radians))
         (t
          (let ((c (cos radians))
                (s (sin radians))
                (g (- 1.0 (cos radians))))
-           (let* ((x (aref a 0))
-                  (y (aref a 1))
-                  (z (aref a 2))
+           (let* ((x (aref v 0))
+                  (y (aref v 1))
+                  (z (aref v 2))
                   (gxx (* g x x)) (gxy (* g x y)) (gxz (* g x z))
                   (gyy (* g y y)) (gyz (* g y z)) (gzz (* g z z)))
              (matrix
@@ -244,14 +244,14 @@ element of A is ignored."
               0.0              0.0              0.0             1.0))))))
 
 (declaim (ftype (sfunction (vec vec) matrix) reorient))
-(defun reorient (a b)
-  "Construct a transformation matrix to reorient A with B."
-  (let ((na (normalize a))
-	(nb (normalize b)))
-    (if (vec~ na nb)
+(defun reorient (v1 v2)
+  "Construct a transformation matrix to reorient V1 with V2."
+  (let ((nv1 (normalize v1))
+	(nv2 (normalize v2)))
+    (if (vec~ nv1 nv2)
 	(identity-matrix)
-	(rotate-around (normalize (cross-product na nb))
-		       (acos (dot-product na nb))))))
+	(rotate-around (normalize (cross-product nv1 nv2))
+		       (acos (dot-product nv1 nv2))))))
 
 (declaim (ftype (sfunction (matrix) matrix) transpose-matrix))
 (defun transpose-matrix (matrix)

@@ -35,7 +35,7 @@
 ;;; VECTOR TYPE
 
 (deftype vec ()
-  "A 3D vector of single floats."
+  "A 3d vector of single floats."
   `(simple-array single-float (3)))
 
 ;;; MATRIX TYPE

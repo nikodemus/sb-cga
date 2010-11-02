@@ -88,7 +88,7 @@ you deserve to lose.")
 (defparameter *symbol-characters* "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890*:-+&#'"
   "List of characters that make up symbols in a docstring.")
 
-(defparameter *symbol-delimiters* " ,.!?;")
+(defparameter *symbol-delimiters* " ,.!?;[]")
 
 (defparameter *ordered-documentation-kinds*
   '(package type structure condition class macro))
