@@ -1,1 +1,530 @@
-SB-CGA
+<html lang="en">
+<head>
+<title>sb-cga</title>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="description" content="sb-cga">
+<meta name="generator" content="makeinfo 4.8">
+<link title="Top" rel="top" href="#Top">
+<link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<style type="text/css"><!--
+  pre.display { font-family:inherit }
+  pre.format  { font-family:inherit }
+  pre.smalldisplay { font-family:inherit; font-size:smaller }
+  pre.smallformat  { font-family:inherit; font-size:smaller }
+  pre.smallexample { font-size:smaller }
+  pre.smalllisp    { font-size:smaller }
+  span.sc    { font-variant:small-caps }
+  span.roman { font-family:serif; font-weight:normal; } 
+  span.sansserif { font-family:sans-serif; font-weight:normal; } 
+.node { visibility:hidden; height: 0px; }
+  .menu { visibility:hidden; height: 0px; }
+  .chapter { background-color:#e4fffe; }
+  .section { background-color:#e4fffe; }
+  .subsection { background-color:#e4fffe; }
+  .settitle { background-color:#e4fffe; }
+  .contents { border: 2px solid black;
+              margin: 1cm 1cm 1cm 1cm;
+              padding-left: 3mm; }
+  body { padding: 2em 8em; font-family: sans-serif; }
+  h1 { padding: 1em; text-align: center; }
+--></style>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-3652989-3']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+</head>
+<body>
+<h1 class="settitle">sb-cga</h1>
+SB-CGA is courtesy of <a href="http://sb-studio.net/">Steel Bank Studio Ltd</a> and written by <a href="mailto:nikodemus@sb-studio.net">Nikodemus Siivola</a>.
+
+   <p>SB-CGA is maintained in Git:
+<pre class="example">     git clone git://github.com/nikodemus/sb-cga.git
+</pre>
+   <p>will get you a local copy.
+<pre class="example">      <a href="http://github.com/nikodemus/sb-cga">http://github.com/nikodemus/sb-cga</a>
+</pre>
+   <p>is the GitHub project page.
+
+   <p>This documentation &ndash; and SB-CGA itself &ndash; is still a work in progress.
+
+   <p><a name="Constant-_002bdefault_002depsilon_002b"></a>
+
+<div class="defun">
+&mdash; Constant: <b>+default-epsilon+</b><var><a name="index-g_t_002bdefault_002depsilon_002b-1"></a></var><br>
+<blockquote><p><a name="index-g_t_002bdefault_002depsilon_002b-2"></a>Used as a liminal value to work around floating point inaccuracy. 
+</p></blockquote></div>
+
+   <p><a name="Constant-_002bidentity_002dmatrix_002b"></a>
+
+<div class="defun">
+&mdash; Constant: <b>+identity-matrix+</b><var><a name="index-g_t_002bidentity_002dmatrix_002b-3"></a></var><br>
+<blockquote><p><a name="index-g_t_002bidentity_002dmatrix_002b-4"></a>Constant identity matrix. 
+</p></blockquote></div>
+
+   <p><a name="Function-_0025adjust_002dvec"></a>
+
+<div class="defun">
+&mdash; Function: <b>%adjust-vec</b><var> result point direction distance<a name="index-g_t_0025adjust_002dvec-5"></a></var><br>
+<blockquote><p><a name="index-g_t_0025adjust_002dvec-6"></a>Multiply <code>vec</code> <code>direction</code> by single-float <code>distance</code> adding the result to <code>vec</code> <code>point</code>. 
+Store result in <code>result</code>, and return it. 
+</p></blockquote></div>
+
+   <p><a name="Function-_0025copy_002dvec"></a>
+
+<div class="defun">
+&mdash; Function: <b>%copy-vec</b><var> result vec<a name="index-g_t_0025copy_002dvec-7"></a></var><br>
+<blockquote><p><a name="index-g_t_0025copy_002dvec-8"></a>Copy contents of <code>vec</code> into <code>result</code>, return <code>result</code>. Unsafe. 
+</p></blockquote></div>
+
+   <p><a name="Function-_0025hadamard_002dproduct"></a>
+
+<div class="defun">
+&mdash; Function: <b>%hadamard-product</b><var> result a b<a name="index-g_t_0025hadamard_002dproduct-9"></a></var><br>
+<blockquote><p><a name="index-g_t_0025hadamard_002dproduct-10"></a>Compute hadamard product (elementwise product) of <code>vec</code> A and <code>vec</code> <code>b</code>, store
+result in <code>vec</code> <code>result</code>. Return <code>result</code>. Unsafe. 
+</p></blockquote></div>
+
+   <p><a name="Function-_0025normalize"></a>
+
+<div class="defun">
+&mdash; Function: <b>%normalize</b><var> result a<a name="index-g_t_0025normalize-11"></a></var><br>
+<blockquote><p><a name="index-g_t_0025normalize-12"></a>Normalize <code>vec</code> A, store result into <code>vec</code> <code>result</code>. Return <code>result</code>. Unsafe. 
+</p></blockquote></div>
+
+   <p><a name="Function-_0025transform_002ddirection"></a>
+
+<div class="defun">
+&mdash; Function: <b>%transform-direction</b><var> result vec matrix<a name="index-g_t_0025transform_002ddirection-13"></a></var><br>
+<blockquote><p><a name="index-g_t_0025transform_002ddirection-14"></a>Apply transformation <code>matrix</code> to <code>vec</code>, store result in <code>result</code>. Return <code>result</code>. Unsafe. 
+</p></blockquote></div>
+
+   <p><a name="Function-_0025transform_002dpoint"></a>
+
+<div class="defun">
+&mdash; Function: <b>%transform-point</b><var> result vec matrix<a name="index-g_t_0025transform_002dpoint-15"></a></var><br>
+<blockquote><p><a name="index-g_t_0025transform_002dpoint-16"></a>Apply transformation <code>matrix</code> to <code>vec</code>, store result in <code>result</code>. Return <code>result</code>. Unsafe. 
+</p></blockquote></div>
+
+   <p><a name="Function-_0025vec_002d"></a>
+
+<div class="defun">
+&mdash; Function: <b>%vec-</b><var> result a b<a name="index-g_t_0025vec_002d-17"></a></var><br>
+<blockquote><p><a name="index-g_t_0025vec_002d-18"></a>Substract <code>vec</code> <code>b</code> from <code>vec</code> A, store result in <code>vec</code> <code>result</code>. Return <code>result</code>. 
+Unsafe. 
+</p></blockquote></div>
+
+   <p><a name="Function-_0025vec_002dlerp"></a>
+
+<div class="defun">
+&mdash; Function: <b>%vec-lerp</b><var> result a b f<a name="index-g_t_0025vec_002dlerp-19"></a></var><br>
+<blockquote><p><a name="index-g_t_0025vec_002dlerp-20"></a>Linear interpolate <code>vec</code> A and <code>vec</code> <code>b</code> using single-float <code>f</code> as the
+interpolation factor, store result in <code>vec</code> <code>result</code>. Return <code>result</code>. Unsafe. 
+</p></blockquote></div>
+
+   <p><a name="Function-_0025vec_002dmax"></a>
+
+<div class="defun">
+&mdash; Function: <b>%vec-max</b><var> result a b<a name="index-g_t_0025vec_002dmax-21"></a></var><br>
+<blockquote><p><a name="index-g_t_0025vec_002dmax-22"></a>Elementwise maximum of <code>vec</code> A and <code>vec</code> <code>b</code>, store result in <code>vec</code> <code>result</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-_0025vec_002dmin"></a>
+
+<div class="defun">
+&mdash; Function: <b>%vec-min</b><var> result a b<a name="index-g_t_0025vec_002dmin-23"></a></var><br>
+<blockquote><p><a name="index-g_t_0025vec_002dmin-24"></a>Elementwise minimum of <code>vec</code> A and <code>vec</code> <code>b</code>, store result in <code>vec</code> <code>result</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-_0025vec_002b"></a>
+
+<div class="defun">
+&mdash; Function: <b>%vec+</b><var> result a b<a name="index-g_t_0025vec_002b-25"></a></var><br>
+<blockquote><p><a name="index-g_t_0025vec_002b-26"></a>Add <code>vec</code> A and <code>b</code>, store result in <code>vec</code> <code>result</code>. Return <code>result</code>. Unsafe
+</p></blockquote></div>
+
+   <p><a name="Function-_0025vec_002f"></a>
+
+<div class="defun">
+&mdash; Function: <b>%vec/</b><var> result a f<a name="index-g_t_0025vec_002f-27"></a></var><br>
+<blockquote><p><a name="index-g_t_0025vec_002f-28"></a>Divide <code>vec</code> A by single-float <code>f</code>, store result in <code>vec</code> <code>result</code>. Return <code>result</code>. 
+Unsafe. 
+</p></blockquote></div>
+
+   <p><a name="Function-_0025vec_002a"></a>
+
+<div class="defun">
+&mdash; Function: <b>%vec*</b><var> result a f<a name="index-g_t_0025vec_002a-29"></a></var><br>
+<blockquote><p><a name="index-g_t_0025vec_002a-30"></a>Multiply <code>vec</code> A with single-float <code>f</code>, store result in <code>vec</code> <code>result</code>. Return
+<code>result</code>. Unsafe. 
+</p></blockquote></div>
+
+   <p><a name="Function-adjust_002dvec"></a>
+
+<div class="defun">
+&mdash; Function: <b>adjust-vec</b><var> point direction distance<a name="index-adjust_002dvec-31"></a></var><br>
+<blockquote><p><a name="index-adjust_002dvec-32"></a>Multiply <code>vec</code> <code>direction</code> by single-float <code>distance</code> adding the result to <code>vec</code> <code>point</code>. 
+Return result as a freshly allocated <code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-alloc_002dvec"></a>
+
+<div class="defun">
+&mdash; Function: <b>alloc-vec</b><var><a name="index-alloc_002dvec-33"></a></var><br>
+<blockquote><p><a name="index-alloc_002dvec-34"></a>Allocate a zero-initialized <code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-cbrt"></a>
+
+<div class="defun">
+&mdash; Function: <b>cbrt</b><var> float<a name="index-cbrt-35"></a></var><br>
+<blockquote><p><a name="index-cbrt-36"></a>Cube root of <code>float</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-copy_002dvec"></a>
+
+<div class="defun">
+&mdash; Function: <b>copy-vec</b><var> vec<a name="index-copy_002dvec-37"></a></var><br>
+<blockquote><p><a name="index-copy_002dvec-38"></a>Allocate a fresh copy of <code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-cross_002dproduct"></a>
+
+<div class="defun">
+&mdash; Function: <b>cross-product</b><var> a b<a name="index-cross_002dproduct-39"></a></var><br>
+<blockquote><p><a name="index-cross_002dproduct-40"></a>Cross product of <code>3d</code> vector A and <code>3d</code> vector <code>b</code>, return result as a freshly
+allocated <code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-cubic_002droots_002dabove"></a>
+
+<div class="defun">
+&mdash; Function: <b>cubic-roots-above</b><var> limit a b c d<a name="index-cubic_002droots_002dabove-41"></a></var><br>
+<blockquote><p><a name="index-cubic_002droots_002dabove-42"></a>Real-valued roots greater than <code>limit</code> for Ax^3+Bx^2+Cx+D. Smallest positive
+root is returned as primary value, and others in increasing order. <code>limit</code>
+indicates lack of a real-valued root above <code>limit</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-cubic_002droots"></a>
+
+<div class="defun">
+&mdash; Function: <b>cubic-roots</b><var> a b c d<a name="index-cubic_002droots-43"></a></var><br>
+<blockquote><p><a name="index-cubic_002droots-44"></a>Real-valued roots for Ax^2+Bx+C. Smallest real root is returned as primary
+value, and the others as the successive values. NaN indicates lack of a
+real-valued root. 
+</p></blockquote></div>
+
+   <p><a name="Function-dot_002dproduct"></a>
+
+<div class="defun">
+&mdash; Function: <b>dot-product</b><var> a b<a name="index-dot_002dproduct-45"></a></var><br>
+<blockquote><p><a name="index-dot_002dproduct-46"></a>Compute dot product <code>vec</code> A and <code>vec</code> <code>b</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-hadamard_002dproduct"></a>
+
+<div class="defun">
+&mdash; Function: <b>hadamard-product</b><var> a b<a name="index-hadamard_002dproduct-47"></a></var><br>
+<blockquote><p><a name="index-hadamard_002dproduct-48"></a>Compute hadamard product (elementwise product) of <code>vec</code> A and <code>vec</code> <code>b</code>,
+return result as a freshly allocated <code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-identity_002dmatrix"></a>
+
+<div class="defun">
+&mdash; Function: <b>identity-matrix</b><var><a name="index-identity_002dmatrix-49"></a></var><br>
+<blockquote><p><a name="index-identity_002dmatrix-50"></a>Construct an identity matrix. 
+</p></blockquote></div>
+
+   <p><a name="Function-inverse_002dmatrix"></a>
+
+<div class="defun">
+&mdash; Function: <b>inverse-matrix</b><var> matrix<a name="index-inverse_002dmatrix-51"></a></var><br>
+<blockquote><p><a name="index-inverse_002dmatrix-52"></a>Inverse of <code>matrix</code>. Signals an error if there is no inverse. 
+</p></blockquote></div>
+
+   <p><a name="Function-matrix_002ddeterminant"></a>
+
+<div class="defun">
+&mdash; Function: <b>matrix-determinant</b><var> matrix<a name="index-matrix_002ddeterminant-53"></a></var><br>
+<blockquote><p><a name="index-matrix_002ddeterminant-54"></a>Determinant of <code>matrix</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-matrix_003d"></a>
+
+<div class="defun">
+&mdash; Function: <b>matrix=</b><var> a b<a name="index-matrix_003d-55"></a></var><br>
+<blockquote><p><a name="index-matrix_003d-56"></a>Return true if <code>matrix</code> A is elementwise equal to <code>matrix</code> <code>b</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-matrix_002a"></a>
+
+<div class="defun">
+&mdash; Function: <b>matrix*</b><var> &amp;rest matrices<a name="index-matrix_002a-57"></a></var><br>
+<blockquote><p><a name="index-matrix_002a-58"></a>Multiply <code>matrices</code>. The result might not be freshly allocated if all,
+or all but one multiplicant is an identity matrix. 
+</p></blockquote></div>
+
+   <p><a name="Function-matrix"></a>
+
+<div class="defun">
+&mdash; Function: <b>matrix</b><var> m11 m12 m13 m14 m21 m22 m23 m24 m31 m32 m33 m34 m41 m42 m43 m44<a name="index-matrix-59"></a></var><br>
+<blockquote><p><a name="index-matrix-60"></a>Construct <code>matrix</code> with the given elements (arguments are provided in row
+major order.) 
+</p></blockquote></div>
+
+   <p><a name="Function-matrixp"></a>
+
+<div class="defun">
+&mdash; Function: <b>matrixp</b><var> object<a name="index-matrixp-61"></a></var><br>
+<blockquote><p><a name="index-matrixp-62"></a>Return true of <code>object</code> is a matrix. 
+</p></blockquote></div>
+
+   <p><a name="Function-matrix_007e"></a>
+
+<div class="defun">
+&mdash; Function: <b>matrix~</b><var> a b &amp;optional epsilon<a name="index-matrix_007e-63"></a></var><br>
+<blockquote><p><a name="index-matrix_007e-64"></a>Return true if <code>matrix</code> A and <code>matrix</code> <code>b</code> are elementwise within <code>epsilon</code> of each other. 
+<code>epsilon</code> defaults to <code>+default-epsilon+</code>
+</p></blockquote></div>
+
+   <p><a name="Function-mref"></a>
+
+<div class="defun">
+&mdash; Function: <b>mref</b><var> matrix row column<a name="index-mref-65"></a></var><br>
+<blockquote><p><a name="index-mref-66"></a>Accessor for value in the specificed <code>row</code> and <code>column</code> in <code>matrix</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-normalize"></a>
+
+<div class="defun">
+&mdash; Function: <b>normalize</b><var> a<a name="index-normalize-67"></a></var><br>
+<blockquote><p><a name="index-normalize-68"></a>Normalize <code>vec</code> A, return result as a freshly allocated <code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-quadratic_002droots_002dabove"></a>
+
+<div class="defun">
+&mdash; Function: <b>quadratic-roots-above</b><var> limit a b c<a name="index-quadratic_002droots_002dabove-69"></a></var><br>
+<blockquote><p><a name="index-quadratic_002droots_002dabove-70"></a>Real-valued roots greater than <code>limit</code> for Ax^2+Bx+C. Smallest positive root
+is returned as primary value, and the other as secondary. <code>limit</code> indicates lack
+of a real-valued root above <code>limit</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-quadratic_002droots"></a>
+
+<div class="defun">
+&mdash; Function: <b>quadratic-roots</b><var> a b c<a name="index-quadratic_002droots-71"></a></var><br>
+<blockquote><p><a name="index-quadratic_002droots-72"></a>Real-valued roots for Ax^2+Bx+C. Smallest real root is returned as primary
+value, and the other as the secondary. In case of a double root both the
+primary and secondary values are the same. NaN indicates lack of a real-valued
+root. 
+</p></blockquote></div>
+
+   <p><a name="Function-reorient"></a>
+
+<div class="defun">
+&mdash; Function: <b>reorient</b><var> a b<a name="index-reorient-73"></a></var><br>
+<blockquote><p><a name="index-reorient-74"></a>Construct a transformation matrix to reorient A with <code>b</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-rotate_002daround"></a>
+
+<div class="defun">
+&mdash; Function: <b>rotate-around</b><var> a radians<a name="index-rotate_002daround-75"></a></var><br>
+<blockquote><p><a name="index-rotate_002daround-76"></a>Construct a rotation matrix that rotates by <code>radians</code> around <code>vec</code> A. 4th
+element of A is ignored. 
+</p></blockquote></div>
+
+   <p><a name="Function-rotate_002a"></a>
+
+<div class="defun">
+&mdash; Function: <b>rotate*</b><var> x y z<a name="index-rotate_002a-77"></a></var><br>
+<blockquote><p><a name="index-rotate_002a-78"></a>Construct a rotation matrix from rotation factors <code>x</code>, <code>y</code>, <code>z</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-rotate"></a>
+
+<div class="defun">
+&mdash; Function: <b>rotate</b><var> vec<a name="index-rotate-79"></a></var><br>
+<blockquote><p><a name="index-rotate-80"></a>Construct a rotation matrix using first three elements of <code>vec</code> as the
+rotation factors. 
+</p></blockquote></div>
+
+   <p><a name="Function-scale_002a"></a>
+
+<div class="defun">
+&mdash; Function: <b>scale*</b><var> x y z<a name="index-scale_002a-81"></a></var><br>
+<blockquote><p><a name="index-scale_002a-82"></a>Construct a scaling matrix from scaling factors <code>x</code>, <code>y</code>, and <code>z</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-scale"></a>
+
+<div class="defun">
+&mdash; Function: <b>scale</b><var> vec<a name="index-scale-83"></a></var><br>
+<blockquote><p><a name="index-scale-84"></a>Construct a scaling matrix using first threee elements of <code>vec</code> as the
+scaling factors. 
+</p></blockquote></div>
+
+   <p><a name="Function-transform_002dbounds"></a>
+
+<div class="defun">
+&mdash; Function: <b>transform-bounds</b><var> a b matrix<a name="index-transform_002dbounds-85"></a></var><br>
+<blockquote><p><a name="index-transform_002dbounds-86"></a>Transform the axis-aligned bounding box specified by its extreme corners A
+and <code>b</code> using <code>matrix</code>. Return new extreme corners (minimum and maximum
+coordinates) as freshly allocted VECs, as the primary and secondary value. 
+</p></blockquote></div>
+
+   <p><a name="Function-transform_002ddirection"></a>
+
+<div class="defun">
+&mdash; Function: <b>transform-direction</b><var> vec matrix<a name="index-transform_002ddirection-87"></a></var><br>
+<blockquote><p><a name="index-transform_002ddirection-88"></a>Apply transformation <code>matrix</code> to <code>vec</code> ignoring the translation component,
+return result as a freshly allocated <code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-transform_002dpoint"></a>
+
+<div class="defun">
+&mdash; Function: <b>transform-point</b><var> vec matrix<a name="index-transform_002dpoint-89"></a></var><br>
+<blockquote><p><a name="index-transform_002dpoint-90"></a>Apply transformation <code>matrix</code> to <code>vec</code>, return result as a
+freshly allocated <code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-translate_002a"></a>
+
+<div class="defun">
+&mdash; Function: <b>translate*</b><var> x y z<a name="index-translate_002a-91"></a></var><br>
+<blockquote><p><a name="index-translate_002a-92"></a>Construct a translation matrix from translation factors <code>x</code>, <code>y</code> and <code>z</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-translate"></a>
+
+<div class="defun">
+&mdash; Function: <b>translate</b><var> vec<a name="index-translate-93"></a></var><br>
+<blockquote><p><a name="index-translate-94"></a>Construct a translation matrix using first three elements of <code>vec</code> as the
+translation factors. 
+</p></blockquote></div>
+
+   <p><a name="Function-transpose_002dmatrix"></a>
+
+<div class="defun">
+&mdash; Function: <b>transpose-matrix</b><var> matrix<a name="index-transpose_002dmatrix-95"></a></var><br>
+<blockquote><p><a name="index-transpose_002dmatrix-96"></a>Transpose of <code>matrix</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-vec_002d"></a>
+
+<div class="defun">
+&mdash; Function: <b>vec-</b><var> a b<a name="index-vec_002d-97"></a></var><br>
+<blockquote><p><a name="index-vec_002d-98"></a>Substract <code>vec</code> <code>b</code> from <code>vec</code> A, return result as a freshly allocated <code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-vec_003d"></a>
+
+<div class="defun">
+&mdash; Function: <b>vec=</b><var> a b<a name="index-vec_003d-99"></a></var><br>
+<blockquote><p><a name="index-vec_003d-100"></a>Return true if <code>vec</code> A and <code>vec</code> <code>b</code> are elementwise identical. 
+</p></blockquote></div>
+
+   <p><a name="Function-vec_002dlength"></a>
+
+<div class="defun">
+&mdash; Function: <b>vec-length</b><var> a<a name="index-vec_002dlength-101"></a></var><br>
+<blockquote><p><a name="index-vec_002dlength-102"></a>Length of <code>vec</code> A. 
+</p></blockquote></div>
+
+   <p><a name="Function-vec_002dlerp"></a>
+
+<div class="defun">
+&mdash; Function: <b>vec-lerp</b><var> a b f<a name="index-vec_002dlerp-103"></a></var><br>
+<blockquote><p><a name="index-vec_002dlerp-104"></a>Linear interpolate <code>vec</code> A and <code>vec</code> <code>b</code> using single-float <code>f</code> as the
+interpolation factor, return result as a freshly allocated <code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-vec_002dmax"></a>
+
+<div class="defun">
+&mdash; Function: <b>vec-max</b><var> vec &amp;rest vecs<a name="index-vec_002dmax-105"></a></var><br>
+<blockquote><p><a name="index-vec_002dmax-106"></a>Elementwise maximum of <code>vec</code> and <code>vecs</code>, return result as a freshly allocated
+<code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-vec_002dmin"></a>
+
+<div class="defun">
+&mdash; Function: <b>vec-min</b><var> vec &amp;rest vecs<a name="index-vec_002dmin-107"></a></var><br>
+<blockquote><p><a name="index-vec_002dmin-108"></a>Elementwise minimum of <code>vec</code> and <code>vecs</code>, return result as a freshly allocated
+<code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-vec_002b"></a>
+
+<div class="defun">
+&mdash; Function: <b>vec+</b><var> a b<a name="index-vec_002b-109"></a></var><br>
+<blockquote><p><a name="index-vec_002b-110"></a>Add <code>vec</code> A and <code>vec</code> <code>b</code>, return result as a freshly allocated <code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-vec_002f"></a>
+
+<div class="defun">
+&mdash; Function: <b>vec/</b><var> a f<a name="index-vec_002f-111"></a></var><br>
+<blockquote><p><a name="index-vec_002f-112"></a>Divide <code>vec</code> A by single-float <code>f</code>, return result as a freshly allocated <code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-vec_002a"></a>
+
+<div class="defun">
+&mdash; Function: <b>vec*</b><var> a f<a name="index-vec_002a-113"></a></var><br>
+<blockquote><p><a name="index-vec_002a-114"></a>Multiply <code>vec</code> A with single-float <code>f</code>, return result as a freshly allocated
+<code>vec</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-vec"></a>
+
+<div class="defun">
+&mdash; Function: <b>vec</b><var> a b c<a name="index-vec-115"></a></var><br>
+<blockquote><p><a name="index-vec-116"></a>Allocate <code>3d</code> vector [A, <code>b</code>, C]. 
+</p></blockquote></div>
+
+   <p><a name="Function-vec_007e"></a>
+
+<div class="defun">
+&mdash; Function: <b>vec~</b><var> a b &amp;optional epsilon<a name="index-vec_007e-117"></a></var><br>
+<blockquote><p><a name="index-vec_007e-118"></a>Return true if <code>vec</code> A and <code>vec</code> <code>b</code> are elementwise within <code>epsilon</code> of each other. 
+<code>epsilon</code> defaults to <code>+default-epsilon+</code>. 
+</p></blockquote></div>
+
+   <p><a name="Function-zero_002dmatrix"></a>
+
+<div class="defun">
+&mdash; Function: <b>zero-matrix</b><var><a name="index-zero_002dmatrix-119"></a></var><br>
+<blockquote><p><a name="index-zero_002dmatrix-120"></a>Construct a zero matrix. 
+</p></blockquote></div>
+
+   <p><a name="Type-matrix"></a>
+
+<div class="defun">
+&mdash; Type: <b>matrix</b><var><a name="index-matrix-121"></a></var><br>
+<blockquote><p><a name="index-matrix-122"></a>4x4 matrix of single floats, represented as a one-dimensional vector stored
+in column-major order. 
+</p></blockquote></div>
+
+   <p><a name="Type-vec"></a>
+
+<div class="defun">
+&mdash; Type: <b>vec</b><var><a name="index-vec-123"></a></var><br>
+<blockquote><p><a name="index-vec-124"></a>A <code>3d</code> vector of single floats. 
+</p></blockquote></div>
+
+</body></html>
+
