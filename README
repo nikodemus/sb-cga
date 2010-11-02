@@ -1,7 +1,4 @@
 -*- mode: org; mode: auto-fill -*-
-#+STARTUP: hidestars
-#+STARTUP: odd
-#+STARTUP: oddeven
 
 * Version 1.0
 *** TODO Porting
@@ -35,15 +32,21 @@
 *** DONE Defpackage
 *** WIP Manual
 ***** DONE Format & docstring extraction.
-***** TODO Writing
-******* TODO Overview
+***** WIP Writing
+******* WIP Overview
        	What SB-CGA is and isn't. What sort of things may change if you use
        	the repo directly. Design choises relating to single/double floats.
-******* TODO Vectors
-******* TODO Matrices
-******* TODO Root solvers
-******* TODO Constants
-*** TODO Miscellany
+******* WIP Vectors
+******** DONE docstrings
+******** TODO Using dynamic-extent
+******** TODO optimizations done
+******* WIP Matrices
+******** DONE docstrings
+******* WIP Root solvers
+******** DONE docstrings
+******** TODO new roots
+******* DONE Miscellany
+*** WIP Root Solvers
 ***** DONE QUADRATIC-ROOTS-ABOVE
 ***** DONE QUADRATIC-ROOTS
 ***** DONE CUBIC-ROOTS-ABOVE
@@ -90,12 +93,14 @@
 ******* DONE VEC-MIN, VEC-MAX
 ******* DONE CROSS-PRODUCT
 *** TODO MATRIX
+***** TODO MATRIX-, MATRIX+
 ***** TODO Tests
 ***** DONE TRANSFORM-VEC, %TRANSFORM-VEC
 ***** DONE MATRIX type
 ***** DONE MREF
 ***** DONE MATRIXP
-***** DONE MATRIX* (variable arity)
+***** WIP MATRIX* (variable arity)
+****** TODO MATRIX x scalar 
 ***** DONE MATRIX
 ***** DONE MAKE-TRANSLATION-MATRIX
 ***** DONE MAKE-SCALING-MATRIX
