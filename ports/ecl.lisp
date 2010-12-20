@@ -24,8 +24,13 @@
 #-ecl
 (error "This file is ecl only!")
 
-(defun single-float-quiet-nan () #.(/ 0 0f0))
-(defun double-float-quiet-nan () #.(/ 0 0d0))
+(defun single-float-quiet-nan ()
+  ;;can't build with literal NaNs as of 10.3.1
+  (declare (notinline /))
+  (/ 0 0f0))
+(defun double-float-quiet-nan ()
+  (declare (notinline /))
+  (/ 0 0d0))
 
 (defun float-nan-p (x)
   ;; hmm, this returns NIL for nan, T for floats in 9.8.3?
