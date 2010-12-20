@@ -33,8 +33,8 @@
   (/ 0 0d0))
 
 (defun float-nan-p (x)
-  ;; hmm, this returns NIL for nan, T for floats in 9.8.3?
-  (sys:float-nan-p x))
+  ;; hmm, this returns NIL for nan, T for floats in 9.8.3, 10.3.1?
+  (not (sys:float-nan-p x)))
 
 (declaim (inline cbrt))
 (defun cbrt (float)
