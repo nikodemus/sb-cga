@@ -28,7 +28,7 @@
 (defun double-float-quiet-nan () excl:*nan-double*)
 
 (defun float-nan-p (x)
-  (excl:nanp x))
+  (not (not (excl:nanp x))))
 
 (declaim (inline cbrt))
 (defun cbrt (float)
