@@ -16,22 +16,20 @@
 ;;;; TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ;;;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-(defsystem :sb-cga
-  :description "Computer graphic algebra for SBCL."
-  :depends-on (:alexandria)
-  :serial t
-  :components
-  ((:file "package")
-   (:file "types")
-   (:file "fndb")
-   (:module "ports"
-            :if-component-dep-fails :try-next
-            :components ((:file "sbcl" :in-order-to ((compile-op (feature :sbcl))))
-                         (:file "ccl" :in-order-to ((compile-op (feature :ccl))))
-                         ;; is there some way to load this iff none of
-                         ;; the others matched?
-                         (:file "ansi" :in-order-to ((compile-op (feature :clisp))))))
-   (:file "vm")
-   (:file "vec")
-   (:file "matrix")
-   (:file "roots")))
+;;; unoptimized portable CL port
+;;; (also GNU CLisp, since it doesn't have NaNs)
+
+(in-package :sb-cga)
+
+(defun single-float-quiet-nan () nil)
+(defun double-float-quiet-nan () nil)
+
+(defun float-nan-p (x)
+  (null x))
+
+(declaim (inline cbrt))
+(defun cbrt (float)
+  "Cube root of FLOAT."
+  (if (minusp float)
+      (- (expt (- float) 1/3))
+      (expt float 1/3)))
