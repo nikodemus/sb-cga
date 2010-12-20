@@ -1,2 +1,7 @@
 *~
 *.fasl
+*.abcl
+*.fas
+*.lib
+*.lx64fsl
+
