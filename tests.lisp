@@ -522,3 +522,19 @@
        4 -10.0 10.0 1.0)
       n)
   132492)
+
+(deftest nan.1
+    (sb-cga::float-nan-p 1.0)
+  nil)
+
+(deftest nan.2
+    (sb-cga::float-nan-p 1d0)
+  nil)
+
+(deftest nan.3
+    (sb-cga::float-nan-p (sb-cga::single-float-quiet-nan))
+  t)
+
+(deftest nan.4
+    (sb-cga::float-nan-p (sb-cga::double-float-quiet-nan))
+  t)
