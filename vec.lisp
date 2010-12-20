@@ -58,7 +58,7 @@
 (declaim (ftype (sfunction () vec) alloc-vec))
 (define-alloc-fun alloc-vec ()
   "Allocate a zero-initialized VEC."
-  (make-array 3 :element-type 'single-float))
+  (make-array 3 :element-type 'single-float :initial-element 0.0))
 
 (declaim (ftype (sfunction (single-float single-float single-float) vec) vec))
 (define-alloc-fun vec (x y z)
