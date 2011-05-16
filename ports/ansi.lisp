@@ -1,4 +1,4 @@
-;;;; By Nikodemus Siivola <nikodemus@random-state.net>, 2009.
+;;;; By Bart Botta <00003b@gmail.com>, 2010.
 ;;;;
 ;;;; Permission is hereby granted, free of charge, to any person
 ;;;; obtaining a copy of this software and associated documentation files
