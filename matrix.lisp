@@ -99,7 +99,7 @@ major order.)"
          (inline zero-matrix))
 (defun zero-matrix ()
   "Construct a zero matrix."
-  (make-array 16 :element-type 'single-float))
+  (make-array 16 :element-type 'single-float :initial-element 0.0))
 
 (declaim (ftype (sfunction () matrix) identity-matrix))
 (eval-when (:compile-toplevel :load-toplevel :execute)
