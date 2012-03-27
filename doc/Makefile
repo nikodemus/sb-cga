@@ -15,5 +15,4 @@ include:
 	--eval '(quit)'
 
 html: include
-	makeinfo --html --no-split --css=style.css sb-cga.texinfo
-
+	makeinfo --html --no-split --css-include=style.css sb-cga.texinfo
