@@ -1,4 +1,4 @@
-;;;; By Nikodemus Siivola <nikodemus@random-state.net>, 2009.
+;;;; By Nikodemus Siivola <nikodemus@random-state.net>, 2012.
 ;;;;
 ;;;; Permission is hereby granted, free of charge, to any person
 ;;;; obtaining a copy of this software and associated documentation files
@@ -19,21 +19,20 @@
 (defsystem :sb-cga
   :description "Computer graphic algebra for SBCL."
   :depends-on (:alexandria)
+  :defsystem-depends-on (:madeira-port)
   :serial t
   :components
   ((:file "package")
    (:file "types")
    (:file "fndb")
    (:module "ports"
-            :if-component-dep-fails :try-next
-            :components ((:file "sbcl" :in-order-to ((compile-op (feature :sbcl))))
-                         (:file "ccl" :in-order-to ((compile-op (feature :ccl))))
-                         (:file "abcl" :in-order-to ((compile-op (feature :abcl))))
-                         (:file "acl" :in-order-to ((compile-op (feature :allegro))))
-                         (:file "ecl" :in-order-to ((compile-op (feature :ecl))))
-                         ;; is there some way to load this iff none of
-                         ;; the others matched?
-                         (:file "ansi" :in-order-to ((compile-op (feature :clisp))))))
+    :components
+    ((:madeira-port "sbcl" :when :sbcl)
+     (:madeira-port "ccl" :when :ccl)
+     (:madeira-port "abcl" :when :abcl)
+     (:madeira-port "acl" :when :allegro)
+     (:madeira-port "ecl" :when :ecl)
+     (:madeira-port "ansi" :unless (:or :sbcl :ccl :abcl :allegro :ecl))))
    (:file "vm")
    (:file "vec")
    (:file "matrix")
