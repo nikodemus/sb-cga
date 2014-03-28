@@ -99,16 +99,16 @@ major order.)"
          (inline zero-matrix))
 (defun zero-matrix ()
   "Construct a zero matrix."
-  (make-array 16 :element-type 'single-float :initial-element 0.0))
+  (make-array 16 :element-type 'single-float :initial-element 0f0))
 
 (declaim (ftype (sfunction () matrix) identity-matrix))
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun identity-matrix ()
     "Construct an identity matrix."
-    (matrix 1.0 0.0 0.0 0.0
-            0.0 1.0 0.0 0.0
-            0.0 0.0 1.0 0.0
-            0.0 0.0 0.0 1.0)))
+    (matrix 1f0 0f0 0f0 0f0
+            0f0 1f0 0f0 0f0
+            0f0 0f0 1f0 0f0
+            0f0 0f0 0f0 1f0)))
 
 (defconstant +identity-matrix+
   (if (boundp '+identity-matrix+)
@@ -157,10 +157,10 @@ or all but one multiplicant is an identity matrix."
 (declaim (ftype (sfunction (single-float single-float single-float) matrix) translate*))
 (defun translate* (x y z)
   "Construct a translation matrix from translation factors X, Y and Z."
-  (matrix 1.0 0.0 0.0 x
-          0.0 1.0 0.0 y
-          0.0 0.0 1.0 z
-          0.0 0.0 0.0 1.0))
+  (matrix 1f0 0f0 0f0 x
+          0f0 1f0 0f0 y
+          0f0 0f0 1f0 z
+          0f0 0f0 0f0 1f0))
 
 (declaim (ftype (sfunction (vec) matrix) translate))
 (defun translate (vec)
@@ -171,10 +171,10 @@ translation factors."
 (declaim (ftype (sfunction (single-float single-float single-float) matrix) scale*))
 (defun scale* (x y z)
   "Construct a scaling matrix from scaling factors X, Y, and Z."
-  (matrix x    0.0  0.0  0.0
-          0.0  y    0.0  0.0
-          0.0  0.0  z    0.0
-          0.0  0.0  0.0  1.0))
+  (matrix x    0f0  0f0  0f0
+          0f0  y    0f0  0f0
+          0f0  0f0  z    0f0
+          0f0  0f0  0f0  1f0))
 
 (declaim (ftype (sfunction (vec) matrix) scale))
 (defun scale (vec)
@@ -186,30 +186,30 @@ scaling factors."
 (defun rotate* (x y z)
   "Construct a rotation matrix from rotation factors X, Y, Z."
   (let ((rotate (identity-matrix)))
-    (unless (= 0.0 z)
+    (unless (= 0f0 z)
       (let ((c (cos z))
             (s (sin z)))
         (setf rotate (matrix* rotate
-                              (matrix c     (- s) 0.0    0.0
-                                      s     c     0.0    0.0
-                                      0.0   0.0   1.0    0.0
-                                      0.0   0.0   0.0    1.0)))))
-    (unless (= 0.0 y)
+                              (matrix c     (- s) 0f0    0f0
+                                      s     c     0f0    0f0
+                                      0f0   0f0   1f0    0f0
+                                      0f0   0f0   0f0    1f0)))))
+    (unless (= 0f0 y)
       (let ((c (cos y))
             (s (sin y)))
         (setf rotate (matrix* rotate
-                              (matrix c     0.0   s      0.0
-                                      0.0   1.0   0.0    0.0
-                                      (- s) 0.0   c      0.0
-                                      0.0   0.0   0.0    1.0)))))
-    (unless (= 0.0 x)
+                              (matrix c     0f0   s      0f0
+                                      0f0   1f0   0f0    0f0
+                                      (- s) 0f0   c      0f0
+                                      0f0   0f0   0f0    1f0)))))
+    (unless (= 0f0 x)
       (let ((c (cos x))
             (s (sin x)))
         (setf rotate (matrix* rotate
-                              (matrix 1.0   0.0   0.0    0.0
-                                      0.0   c     (- s)  0.0
-                                      0.0   s     c      0.0
-                                      0.0   0.0   0.0    1.0)))))
+                              (matrix 1f0   0f0   0f0    0f0
+                                      0f0   c     (- s)  0f0
+                                      0f0   s     c      0f0
+                                      0f0   0f0   0f0    1f0)))))
     rotate))
 
 (declaim (ftype (sfunction (vec) matrix) rotate))
@@ -222,26 +222,26 @@ rotation factors."
 (defun rotate-around (v radians)
   "Construct a rotation matrix that rotates by RADIANS around VEC V. 4th
 element of V is ignored."
-  (cond ((vec= v (vec 1.0 0.0 0.0))
-         (rotate* radians 0.0 0.0))
-        ((vec= v (vec 0.0 1.0 0.0))
-         (rotate* 0.0 radians 0.0))
-        ((vec= v (vec 0.0 0.0 1.0))
-         (rotate* 0.0 0.0 radians))
+  (cond ((vec= v (vec 1f0 0f0 0f0))
+         (rotate* radians 0f0 0f0))
+        ((vec= v (vec 0f0 1f0 0f0))
+         (rotate* 0f0 radians 0f0))
+        ((vec= v (vec 0f0 0f0 1f0))
+         (rotate* 0f0 0f0 radians))
         (t
          (let ((c (cos radians))
                (s (sin radians))
-               (g (- 1.0 (cos radians))))
+               (g (- 1f0 (cos radians))))
            (let* ((x (aref v 0))
                   (y (aref v 1))
                   (z (aref v 2))
                   (gxx (* g x x)) (gxy (* g x y)) (gxz (* g x z))
                   (gyy (* g y y)) (gyz (* g y z)) (gzz (* g z z)))
              (matrix
-              (+ gxx c)        (- gxy (* s z))  (+ gxz (* s y)) 0.0
-              (+ gxy (* s z))  (+ gyy c)        (- gyz (* s x)) 0.0
-              (- gxz (* s y))  (+ gyz (* s x))  (+ gzz c)       0.0
-              0.0              0.0              0.0             1.0))))))
+              (+ gxx c)        (- gxy (* s z))  (+ gxz (* s y)) 0f0
+              (+ gxy (* s z))  (+ gyy c)        (- gyz (* s x)) 0f0
+              (- gxz (* s y))  (+ gyz (* s x))  (+ gzz c)       0f0
+              0f0              0f0              0f0             1f0))))))
 
 (declaim (ftype (sfunction (vec vec) matrix) reorient))
 (defun reorient (v1 v2)
@@ -268,8 +268,8 @@ element of V is ignored."
   (declare (type matrix matrix))
   (if (eq matrix +identity-matrix+)
       +identity-matrix+
-      (if (and (= 0.0 (mref matrix 3 0) (mref matrix 3 1) (mref matrix 3 2))
-               (= 1.0 (mref matrix 3 3)))
+      (if (and (= 0f0 (mref matrix 3 0) (mref matrix 3 1) (mref matrix 3 2))
+               (= 1f0 (mref matrix 3 3)))
           ;; Affine matrix, fast track (and less loss of accuracy from multiplications)
           (let ((inverse (zero-matrix)))
             ;; Inverse of the upper left 3x3
@@ -279,7 +279,7 @@ element of V is ignored."
                   ;; implementation.
                   (dotimes (i 3)
                     (dotimes (j 3)
-                      (unless (= 0.0 (mref matrix i j))
+                      (unless (= 0f0 (mref matrix i j))
                         (return-from inverse-matrix (generic-inverse-matrix matrix)))))
                   (macrolet ((inv ((i j) (ai aj bi bj) (ci cj di dj))
                              `(setf (mref inverse ,(1- i) ,(1- j))
@@ -306,7 +306,7 @@ element of V is ignored."
                                                (* y (mref inverse i 1))
                                                (* z (mref inverse i 2)))))))
             ;; affine bottom row (0 0 0 1)
-            (setf (mref inverse 3 3) 1.0)
+            (setf (mref inverse 3 3) 1f0)
             inverse)
           (generic-inverse-matrix matrix))))
 
