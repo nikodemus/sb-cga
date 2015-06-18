@@ -1,0 +1,43 @@
+-*- mode: org; mode: auto-fill -*-
+
+* Version 1.0
+*** TODO Porting
+    Who woulda thunk people want to port this?
+***** Guidelines & Principles
+******* No #+sbcl #-sbcl in source files that exist for other reasons than portability.
+******* Nikodemus will not maintain portability: SBCL port will be the canonical one.
+******* Uglified code is allowed in shared files if it makes things faster for SBCL.
+******* Uglified code is not allowed in shared if it makes code faster for implementation X.
+	(Put it in an implementation specific file instead.)
+***** TODO Rename to CL-CGA, maybe
+      Iff there are at least two ports with maintainers that use them
+      and will probably continue to do so.
+*** WIP Manual
+***** WIP Overview
+      What SB-CGA is and isn't. What sort of things may change if you use
+      the repo directly. Design choises relating to single/double floats.
+***** WIP Vectors
+******* TODO Using dynamic-extent
+******* TODO optimizations done
+***** WIP Matrices
+******** DONE docstrings
+***** WIP Root solvers
+******* TODO QUADRIC-ROOTS-ABOVE
+******* TODO QUADRIC-ROOTS
+*** TODO VEC
+***** TODO Additional operations
+******* TODO NORMALIZED-TRANSFORM-POINT
+	The reason these seem worthwhile is that they avoid memory
+	traffic -- but it is probably not a good idea to expose
+	them as part of the interface!
+******* TODO Implement VEC-MIN/MAX using MINPS/MAXPS.
+******* TODO Tests for these
+*** TODO MATRIX
+***** TODO MATRIX-, MATRIX+
+***** TODO Tests
+***** WIP MATRIX* (variable arity)
+****** TODO MATRIX x scalar 
+*** TODO Consider bang-style public API
+* Version 2.0
+*** TODO Separate transform type, used double-floats in matrices.
+*** TODO Variable arity in vector arithmetic without memory traffic for intermediate results
