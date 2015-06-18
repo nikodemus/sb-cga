@@ -26,11 +26,26 @@
 
 ;;;; Misc bits.
 
-(declaim (inline cbrt/single))
-(sb-alien:define-alien-routine ("cbrtf" cbrt/single) float (float float))
-
-(declaim (inline cbrt/double))
-(sb-alien:define-alien-routine ("cbrt" cbrt/double) sb-alien:double (double sb-alien:double))
+(macrolet ((def (name cname ctype ltype one)
+             `(progn
+                (declaim (inline ,name))
+                ,(if (sb-sys:find-foreign-symbol-address cname)
+                     `(sb-alien:define-alien-routine (,cname ,name)
+                        ,ctype (,ctype ,ctype))
+                     ;; In absence of nice cbrt implementation (Windows...)
+                     ;; let's use the stupid one. Note: this fails
+                     ;; cubic-roots-above.1 test by finding more roots than
+                     ;; expected. Haven't checked if this is because this
+                     ;; implementation is more or less precise and libc cbrt.
+                     ;;
+                     ;; FIXME: Could just implement Kahan's cbrt in Lisp.
+                     `(defun ,name (n)
+                        (declare (,ltype n))
+                        (if (minusp n)
+                            (- (expt (- n) ,(/ one 3)))
+                            (expt n ,(/ one 3))))))))
+  (def cbrt/single "cbrtf" sb-alien:float single-float 1f0)
+  (def cbrt/double "cbrt" sb-alien:double double-float 1d0))
 
 (declaim (inline cbrt))
 (defun cbrt (float)
