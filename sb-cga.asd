@@ -18,6 +18,9 @@
 
 (defsystem :sb-cga
   :description "Computer graphic algebra for SBCL."
+  :licence "MIT"
+  :author "Nikodemus Siivola <nikdoemus@random-state.net>"
+  :version "1.0.0"
   :depends-on (:alexandria)
   :defsystem-depends-on (:madeira-port)
   :serial t
