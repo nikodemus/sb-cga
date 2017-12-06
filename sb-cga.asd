@@ -20,7 +20,7 @@
   :description "Computer graphic algebra for SBCL."
   :licence "MIT"
   :author "Nikodemus Siivola <nikdoemus@random-state.net>"
-  :version "1.0.0"
+  :version "1.0.1"
   :depends-on (:alexandria)
   :serial t
   :components
