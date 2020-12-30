@@ -90,17 +90,17 @@
 #+sb-cga-sse2
 (progn
   (defmacro ea-for-data (vector index)
-    `(sb-vm::make-ea :dword :base ,vector
-                     :disp (- (+ (* sb-vm:vector-data-offset sb-vm:n-word-bytes)
-                                 ;; 4 bytes per single-float
-                                 (* ,index 4))
-                              sb-vm:other-pointer-lowtag)))
+    `(sb-vm::ea (- (+ (* sb-vm:vector-data-offset sb-vm:n-word-bytes)
+                      ;; 4 bytes per single-float
+                      (* ,index 4))
+                   sb-vm:other-pointer-lowtag)
+                ,vector))
   (defmacro ea-for-slice (vector &optional (index 0))
-    `(sb-vm::make-ea :dword :base ,vector
-                     :disp (- (+ (* sb-vm:vector-data-offset sb-vm:n-word-bytes)
-                                 ;; 4 bytes per single-float, 16 per slice.
-                                 (* ,index 16))
-                              sb-vm:other-pointer-lowtag)))
+    `(sb-vm::ea (- (+ (* sb-vm:vector-data-offset sb-vm:n-word-bytes)
+                      ;; 4 bytes per single-float, 16 per slice.
+                      (* ,index 16))
+                   sb-vm:other-pointer-lowtag)
+                ,vector))
   (defmacro load-slice (xmm vector &optional (index 0))
     `(inst movaps ,xmm (ea-for-slice ,vector ,index)))
   (defmacro store-slice (xmm vector &optional (index 0))
