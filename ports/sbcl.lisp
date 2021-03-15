@@ -88,19 +88,46 @@
 ;;;; Utilities for writing VOPs
 
 #+sb-cga-sse2
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  ;; check if we should use sb-vm::ea or make-ea
+  ;; ea was added in 1.4.11
+  ;; make-ea was removed after 2.0.11
+  ;; use make-ea before SBCL 2.0.0
+  (when (< (parse-integer (lisp-implementation-version) :junk-allowed t) 2)
+    (pushnew :sb-cga-make-ea *features*)))
+
+#+sb-cga-sse2
 (progn
+  #-sb-cga-make-ea
   (defmacro ea-for-data (vector index)
     `(sb-vm::ea (- (+ (* sb-vm:vector-data-offset sb-vm:n-word-bytes)
                       ;; 4 bytes per single-float
                       (* ,index 4))
                    sb-vm:other-pointer-lowtag)
                 ,vector))
+  #+sb-cga-make-ea
+  (defmacro ea-for-data (vector index)
+    `(sb-vm::make-ea :dword
+                     :base ,vector
+                     :disp (- (+ (* sb-vm:vector-data-offset sb-vm:n-word-bytes)
+                                 ;; 4 bytes per single-float
+                                 (* ,index 4))
+                              sb-vm:other-pointer-lowtag)))
+  #-sb-cga-make-ea
   (defmacro ea-for-slice (vector &optional (index 0))
     `(sb-vm::ea (- (+ (* sb-vm:vector-data-offset sb-vm:n-word-bytes)
                       ;; 4 bytes per single-float, 16 per slice.
                       (* ,index 16))
                    sb-vm:other-pointer-lowtag)
                 ,vector))
+  #+sb-cga-make-ea
+  (defmacro ea-for-slice (vector &optional (index 0))
+    `(sb-vm::make-ea :dword
+                     :base ,vector
+                     :disp (- (+ (* sb-vm:vector-data-offset sb-vm:n-word-bytes)
+                                 ;; 4 bytes per single-float, 16 per slice.
+                                 (* ,index 16))
+                              sb-vm:other-pointer-lowtag)))
   (defmacro load-slice (xmm vector &optional (index 0))
     `(inst movaps ,xmm (ea-for-slice ,vector ,index)))
   (defmacro store-slice (xmm vector &optional (index 0))
