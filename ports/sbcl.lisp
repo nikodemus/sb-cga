@@ -92,8 +92,7 @@
   ;; check if we should use sb-vm::ea or make-ea
   ;; ea was added in 1.4.11
   ;; make-ea was removed after 2.0.11
-  ;; use make-ea before SBCL 2.0.0
-  (when (< (parse-integer (lisp-implementation-version) :junk-allowed t) 2)
+  (when (fboundp (find-symbol "MAKE-EA" :sb-vm))
     (pushnew :sb-cga-make-ea *features*)))
 
 #+sb-cga-sse2
