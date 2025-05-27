@@ -250,8 +250,11 @@ element of V is ignored."
 	(nv2 (normalize v2)))
     (if (vec~ nv1 nv2)
 	(identity-matrix)
-	(rotate-around (normalize (cross-product nv1 nv2))
-		       (acos (dot-product nv1 nv2))))))
+        (let ((cp (cross-product nv1 nv2)))
+          (if (zerop (vec-length cp))
+              (scale* -1.0 -1.0 -1.0)
+	      (rotate-around (normalize cp)
+		             (acos (dot-product nv1 nv2))))))))
 
 (declaim (ftype (sfunction (matrix) matrix) transpose-matrix))
 (defun transpose-matrix (matrix)

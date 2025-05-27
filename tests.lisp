@@ -408,6 +408,15 @@
           0.001)
   t)
 
+;; Edge case: vectors pointing in opposite directions.
+(deftest reorient.2
+    (vec~ (normalize (vec -1.0 0.0 0.0))
+          (transform-point (vec 1.0 0.0 0.0)
+                           (reorient (vec 1.0 0.0 0.0)
+                                     (vec -1.0 0.0 0.0)))
+          0.001)
+  t)
+
 (deftest inverse-matrix.1
     (let* ((ma (random-affine-matrix 100.0))
            (ma2 (inverse-matrix ma))
