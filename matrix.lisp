@@ -250,11 +250,18 @@ element of V is ignored."
 	(nv2 (normalize v2)))
     (if (vec~ nv1 nv2)
 	(identity-matrix)
-        (let ((cp (cross-product nv1 nv2)))
+        (let ((cp (cross-product nv1 nv2))
+              (dot (dot-product nv1 nv2)))
           (if (zerop (vec-length cp))
-              (scale* -1.0 -1.0 -1.0)
-	      (rotate-around (normalize cp)
-		             (acos (dot-product nv1 nv2))))))))
+              ;; This means vectors must be pointing the same direction, or
+              ;; opposite directions. The cross product can't be used as
+              ;; an axis of rotation, so if they're pointing the same direction,
+              ;; use the identity transformation. If opposite directions, then
+              ;; flip.
+              (if (> (dot-product nv1 nv2) 0)
+                  +identity-matrix+
+                  (scale* -1f0 -1f0 -1f0))
+	      (rotate-around (normalize cp) (acos dot)))))))
 
 (declaim (ftype (sfunction (matrix) matrix) transpose-matrix))
 (defun transpose-matrix (matrix)
